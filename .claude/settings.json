@@ -9,7 +9,8 @@
       "Bash(rm -f new3d-*.png)",
       "Bash(sed -i 's/new-\\\\${String/new3d-${String/' shoot.mjs)",
       "Bash(node -e ' *)",
-      "Bash(node shoot.mjs \"http://localhost:5174/\" v2)"
+      "Bash(node shoot.mjs \"http://localhost:5174/\" v2)",
+      "Bash(node node_modules/vite/bin/vite.js --port 5175)"
     ]
   }
 }

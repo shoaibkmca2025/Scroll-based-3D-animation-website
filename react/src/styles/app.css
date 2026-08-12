@@ -307,27 +307,33 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
 .cn-aud-grid { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 22px; }
 
+/* These three sit directly over the busiest part of the 3D scene — tiled
+   roofs, tree canopies and a dark tower — so they carry more fill than the
+   other panels and frost what is behind them. Below ~85% the backdrop's
+   edges read straight through the body copy. */
 .cn-aud {
   border-radius: var(--radius-lg);
   padding: 34px 30px 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  backdrop-filter: blur(14px) saturate(1.05);
+  -webkit-backdrop-filter: blur(14px) saturate(1.05);
 }
 .cn-aud--res {
-  background: color-mix(in srgb, #ffffff 42%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 58%, transparent);
-  box-shadow: var(--shadow-md);
+  background: color-mix(in srgb, #fffdf7 90%, transparent);
+  border: 1px solid color-mix(in srgb, #ffffff 70%, transparent);
+  box-shadow: var(--shadow-lg);
 }
 .cn-aud--com {
-  background: color-mix(in srgb, #e1eecc 62%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 50%, transparent);
-  box-shadow: var(--shadow-md);
+  background: color-mix(in srgb, #e7f1d8 92%, transparent);
+  border: 1px solid color-mix(in srgb, #ffffff 62%, transparent);
+  box-shadow: var(--shadow-lg);
 }
 .cn-aud--sec {
-  background: color-mix(in srgb, #2e2b25 76%, transparent);
+  background: color-mix(in srgb, #2b2822 94%, transparent);
   color: var(--color-neutral-100);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: var(--shadow-lg);
 }
 .cn-aud h3 { font-size: 28px; margin: 0 0 16px; }
@@ -354,6 +360,16 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   filter: drop-shadow(0 16px 30px color-mix(in srgb, #2e2b25 22%, transparent));
 }
 .cn-aud--sec .cn-aud-shot img { filter: drop-shadow(0 16px 34px rgba(0, 0, 0, 0.5)); }
+
+/* Every app screenshot on the page is a ~75% transparent PNG, so it takes the
+   colour of whatever is behind it — over the 3D scene that means towers and
+   tree canopies show through the UI. They all sit on a plate instead. */
+.cn-aud-shot img,
+.cn-garden-shots img,
+.cn-rail-item img {
+  background: #fbf7ee;
+  border-radius: 14px 14px 0 0;
+}
 
 /* ── garden / amenities ───────────────────────────────────────────── */
 .cn-garden {
@@ -446,11 +462,24 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   align-items: flex-start;
   scrollbar-width: none;
 }
-.cn-rail-item { flex: 0 0 auto; width: 260px; }
+/* Each screen rides on its own card. Bare over the 3D the caption fell on
+   whatever happened to be behind it — usually a tree. */
+.cn-rail-item {
+  flex: 0 0 auto;
+  width: 288px;
+  padding: 14px 14px 18px;
+  background: color-mix(in srgb, #fffdf7 88%, transparent);
+  border: 1px solid color-mix(in srgb, #ffffff 62%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px) saturate(1.05);
+  -webkit-backdrop-filter: blur(12px) saturate(1.05);
+}
 .cn-rail-item img {
   width: 100%;
   height: auto;
   display: block;
+  border-radius: 12px 12px 0 0;
   filter: drop-shadow(0 24px 40px color-mix(in srgb, #2e2b25 34%, transparent));
 }
 .cn-rail-cap { margin-top: 16px; font-size: 14px; color: var(--color-neutral-700); line-height: 1.5; }
