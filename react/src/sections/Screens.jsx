@@ -12,7 +12,9 @@ export default function Screens() {
       <div data-rail="1" className="cn-rail">
         {railScreens.map((s) => (
           <div key={s.title} className="cn-rail-item">
-            <img src={s.img} alt={s.title} width="1170" height="2532" loading="lazy" />
+            <div className="cn-rail-shot">
+              <img src={s.img} alt={s.title} width="1170" height="2532" loading="lazy" />
+            </div>
             <div className="cn-rail-cap">
               <strong>{s.title}</strong>
               {s.body}
