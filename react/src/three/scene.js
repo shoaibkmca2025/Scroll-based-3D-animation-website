@@ -3,10 +3,12 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { buildSurfaces, disposeSurfaces } from './textures.js';
 
 /* The society behind the page.
-   The camera — its stops, easing, lerp rate, idle sway and frame throttle — is
-   unchanged from the original society3d.js. What changed is the model it looks
-   at: textured PBR surfaces, image-based lighting, filmic tone mapping and a
-   lot more built detail, all batched down to a couple of dozen draw calls. */
+   The camera keeps the original society3d.js stops, easing curve, follow rate
+   and idle sway. Its delivery is rebuilt: every visible frame is drawn, the
+   follow is time-based rather than per-frame, and the scroll position is run
+   through a critically damped spring before the camera reads it. The model is
+   rebuilt too — textured PBR surfaces, image-based lighting, filmic tone
+   mapping and far more built detail, batched into ~35 draw calls. */
 
 const TAU = Math.PI * 2;
 
@@ -187,11 +189,17 @@ function createMaterials() {
     trim: std('terracotta', { color: 0xc67139, roughness: 0.6 }),
     deep: std('clay-dark', { color: 0x8c491a, roughness: 0.64 }),
     wood: std('timber', { color: 0x6a5a45, roughness: 0.8 }),
+    bark: std('bark', { color: 0x554634, roughness: 0.97 }),
+    plastic: std('plastic', { color: 0x3a3733, roughness: 0.6 }),
     leaf: std('foliage', { color: 0x5f7345, roughness: 0.94, flatShading: true }),
     glass: std('glazing', { color: 0x14222c, roughness: 0.07, metalness: 0.05, envMapIntensity: 2.2 }),
     metal: std('metal', { color: 0xa9a396, roughness: 0.34, metalness: 0.88, envMapIntensity: 1.7 }),
     water: std('water', { color: 0x2f6a80, roughness: 0.05, metalness: 0.15, envMapIntensity: 2.4 }),
     red: std('signal-red', { color: 0xa72608, roughness: 0.42 }),
+    tyre: std('tyre', { color: 0x22201e, roughness: 0.9 }),
+    cars: [0xb5652f, 0x5c554a, 0x9c2e12, 0x86986c].map((c, i) =>
+      std('car-paint-' + i, { color: c, roughness: 0.26, metalness: 0.5, envMapIntensity: 1.7 })
+    ),
     white: std('paint-white', { color: 0xece7dc, roughness: 0.5 }),
     lamp: std('lamp-lens', { color: 0xfff4dc, roughness: 0.3, emissive: 0xffe6b0, emissiveIntensity: 0.35 })
   };
@@ -220,8 +228,23 @@ function applySurfaces(M, S) {
   put(M.trim, S.tiles, { normal: 0.8, tint: 0xe4a273, rough: 0.66 });
   put(M.deep, S.concrete, { normal: 0.5, tint: 0x7d4118 });
   put(M.wood, S.wood, { normal: 0.8 });
+  put(M.bark, S.wood, { normal: 1.1, tint: 0x8f7a5f });
   put(M.leaf, S.leaf, { normal: 0.9 });
   put(M.white, S.plaster, { normal: 0.3, tint: 0xe6e1d6 });
+  put(M.tyre, S.tyre, { normal: 0.9 });
+  put(M.metal, S.metal, { normal: 0.4 });
+  // Car paint keeps its colour: the map is near-white flake and clearcoat, so
+  // tinting it with the body colour is the whole point.
+  M.cars.forEach((mat) => {
+    mat.map = S.carPaint.map;
+    mat.normalMap = S.carPaint.normalMap;
+    mat.normalScale.set(0.3, 0.3);
+    mat.needsUpdate = true;
+  });
+  // Water is a normal map only — the colour and reflectivity are the material's.
+  M.water.normalMap = S.water.normalMap;
+  M.water.normalScale.set(0.55, 0.55);
+  M.water.needsUpdate = true;
 }
 
 // ── the model ─────────────────────────────────────────────────────────
@@ -258,9 +281,15 @@ function buildWorld(M) {
   B.add(boxGeo(0.16, 0.02, 1.4, 0.6), M.white, TRS(0, 0.05, 23));
   B.add(boxGeo(0.16, 0.02, 1.4, 0.6), M.white, TRS(0, 0.05, 26));
 
-  // kerbs
-  B.add(flatGeo(new THREE.RingGeometry(21, 21.5, 72), 0.5), M.concrete, TRS(0, 0.09, 0, -Math.PI / 2));
-  B.add(flatGeo(new THREE.RingGeometry(16.5, 17, 72), 0.5), M.concrete, TRS(0, 0.09, 0, -Math.PI / 2));
+  /* Kerbs sit at 0.062, not at the 0.09 they used to.
+     Both of these circles cross the parking apron, whose top face is at
+     exactly 0.09 — two coplanar surfaces, which the depth buffer cannot
+     order, so the kerb flickered against the tarmac as a ring that shimmered
+     whenever the camera moved. At 0.062 they fall inside the apron slab
+     (which spans 0.01–0.09) and are simply hidden where it covers them,
+     while still sitting proud of the drive everywhere else. */
+  B.add(flatGeo(new THREE.RingGeometry(21, 21.5, 72), 0.5), M.concrete, TRS(0, 0.062, 0, -Math.PI / 2));
+  B.add(flatGeo(new THREE.RingGeometry(16.5, 17, 72), 0.5), M.concrete, TRS(0, 0.062, 0, -Math.PI / 2));
   // footpath just inside the boundary
   B.add(flatGeo(new THREE.RingGeometry(29.6, 31.2, 72), 0.55), M.concrete, TRS(0, 0.06, 0, -Math.PI / 2));
 
@@ -464,7 +493,10 @@ function buildWorld(M) {
     const px = 25;
     const pz = 7;
     B.add(flatGeo(new THREE.CircleGeometry(8, 48), 0.24), M.sand, TRS(px, 0.03, pz, -Math.PI / 2));
-    B.add(flatGeo(new THREE.RingGeometry(7.9, 8.35, 48), 0.6), M.concrete, TRS(px, 0.06, pz, -Math.PI / 2));
+    // 0.072, not 0.06: the boundary footpath ring is at 0.06 and this ring
+    // crosses it (it spans 17.6–34.3 from the origin, the footpath 29.6–31.2),
+    // so sharing a height would set the two z-fighting where they meet
+    B.add(flatGeo(new THREE.RingGeometry(7.9, 8.35, 48), 0.6), M.concrete, TRS(px, 0.072, pz, -Math.PI / 2));
 
     // slide
     B.add(boxGeo(2.0, 0.16, 2.0, 0.6), M.wood, TRS(px - 2.6, 2.2, pz - 1));
@@ -499,35 +531,32 @@ function buildWorld(M) {
   // ── parking ──
   {
     B.add(boxGeo(26, 0.08, 7, 0.2), M.asphalt, TRS(0, 0.05, 14));
-    for (let i = -5; i <= 5; i++) B.add(boxGeo(0.11, 0.02, 6.4, 0.5), M.white, TRS(i * 2.3, 0.1, 14));
+    // bay lines clear the apron's top face rather than resting exactly on it
+    for (let i = -5; i <= 5; i++) B.add(boxGeo(0.11, 0.02, 6.4, 0.5), M.white, TRS(i * 2.3, 0.105, 14));
     B.add(boxGeo(26.4, 0.14, 0.3, 0.5), M.concrete, TRS(0, 0.07, 17.55));
 
-    const bodies = [
-      [-8.1, 0xb5652f],
-      [-3.4, 0x5c554a],
-      [1.2, 0x9c2e12],
-      [8.0, 0x86986c]
-    ];
-    bodies.forEach((v, i) => {
-      const paint = new THREE.MeshStandardMaterial({
-        name: 'car-paint-' + i,
-        color: v[1],
-        roughness: 0.28,
-        metalness: 0.55,
-        envMapIntensity: 1.6
+    [-8.1, -3.4, 1.2, 8.0].forEach((cx, i) => {
+      const paint = M.cars[i];
+      /* Built up from stacked slabs of decreasing width instead of one box.
+         A real body is never a rectangular prism — it tucks in towards the
+         sills and again towards the roof, and those chamfers catch the sun as
+         thin highlights. That silhouette is most of what separates a car from
+         a brick at this distance. */
+      B.add(boxGeo(1.74, 0.16, 4.06, 0.5), paint, TRS(cx, 0.44, 14)); // lower tuck
+      B.add(boxGeo(1.86, 0.34, 4.1, 0.5), paint, TRS(cx, 0.63, 14)); // main body
+      B.add(boxGeo(1.8, 0.14, 3.9, 0.5), paint, TRS(cx, 0.86, 14)); // shoulder
+      B.add(boxGeo(1.62, 0.1, 2.5, 0.5), paint, TRS(cx, 0.96, 13.9)); // cant rail
+      B.add(boxGeo(1.5, 0.34, 2.16, 0.5), paint, TRS(cx, 1.14, 13.88)); // roof pillar line
+      B.add(boxGeo(1.34, 0.1, 1.9, 0.5), paint, TRS(cx, 1.33, 13.9)); // roof
+      B.add(boxGeo(1.54, 0.3, 1.92, 0.6), M.glass, TRS(cx, 1.15, 13.88));
+      [-0.56, 0.56].forEach((dx) => {
+        B.add(boxGeo(0.32, 0.1, 0.06, 1.4), M.lamp, TRS(cx + dx, 0.76, 16.02));
+        B.add(boxGeo(0.3, 0.09, 0.06, 1.4), M.red, TRS(cx + dx, 0.78, 11.97));
       });
-      const cx = v[0];
-      B.add(boxGeo(1.86, 0.56, 4.1, 0.5), paint, TRS(cx, 0.62, 14));
-      B.add(boxGeo(1.66, 0.42, 2.2, 0.5), paint, TRS(cx, 1.06, 13.85));
-      B.add(boxGeo(1.7, 0.36, 1.9, 0.6), M.glass, TRS(cx, 1.12, 13.85));
-      [-0.58, 0.58].forEach((dx) => {
-        B.add(boxGeo(0.44, 0.13, 0.08, 1.2), M.lamp, TRS(cx + dx, 0.74, 16.03));
-        B.add(boxGeo(0.4, 0.11, 0.08, 1.2), M.red, TRS(cx + dx, 0.76, 11.96));
-      });
-      B.add(boxGeo(1.9, 0.14, 0.16, 0.9), M.deep, TRS(cx, 0.5, 16.02));
-      B.add(boxGeo(1.9, 0.14, 0.16, 0.9), M.deep, TRS(cx, 0.5, 11.98));
+      B.add(boxGeo(1.9, 0.13, 0.14, 0.9), M.plastic, TRS(cx, 0.48, 16.02));
+      B.add(boxGeo(1.9, 0.13, 0.14, 0.9), M.plastic, TRS(cx, 0.48, 11.98));
       [[-0.92, 1.4], [0.92, 1.4], [-0.92, -1.4], [0.92, -1.4]].forEach((wp) => {
-        B.add(cylGeo(0.34, 0.34, 0.2, 16, 0.7), M.deep, TRS(cx + wp[0], 0.34, 14 + wp[1], 0, 0, Math.PI / 2));
+        B.add(cylGeo(0.34, 0.34, 0.2, 16, 0.7), M.tyre, TRS(cx + wp[0], 0.34, 14 + wp[1], 0, 0, Math.PI / 2));
         B.add(cylGeo(0.16, 0.16, 0.22, 12, 0.9), M.metal, TRS(cx + wp[0], 0.34, 14 + wp[1], 0, 0, Math.PI / 2));
       });
     });
@@ -645,14 +674,39 @@ function buildWorld(M) {
   world.add(instanced(balconyRail, M.metal, rails, 'balcony-rails'));
   world.add(instanced(acUnit, M.metal, acs, 'ac-units'));
 
-  const trunkGeo = cylGeo(0.17, 0.28, 2.2, 10, 0.7).translate(0, 1.1, 0);
+  /* A crown built from many small irregular clumps rather than two or three
+     big spheres. Three smooth blobs on a stick is the single most cartoon
+     thing in the scene; real foliage reads as a broken silhouette, so the
+     clumps are scattered on a squashed hemisphere with varied size and a
+     ragged edge. */
+  const trunkGeo = cylGeo(0.17, 0.28, 2.3, 10, 0.7).translate(0, 1.15, 0);
+  let cseed = 9;
+  const crnd = () => ((cseed = (cseed * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const clumps = [];
+  for (let i = 0; i < 16; i++) {
+    const a = crnd() * TAU;
+    const rr = 0.35 + crnd() * 0.78;
+    const yy = 2.35 + crnd() * 1.15;
+    const s = 0.34 + crnd() * 0.42;
+    const g = new THREE.IcosahedronGeometry(s, 1);
+    g.scale(1, 0.82 + crnd() * 0.3, 1);
+    clumps.push(g.translate(Math.cos(a) * rr, yy, Math.sin(a) * rr));
+  }
   const canopyGeo = mergeGeometries([
-    new THREE.IcosahedronGeometry(1.12, 1).translate(0, 3.05, 0),
-    new THREE.IcosahedronGeometry(0.8, 1).translate(0.72, 2.5, 0.55),
-    new THREE.IcosahedronGeometry(0.66, 1).translate(-0.6, 2.42, -0.42)
+    new THREE.IcosahedronGeometry(0.95, 1).scale(1, 0.86, 1).translate(0, 2.95, 0),
+    ...clumps
   ], false);
-  world.add(instanced(trunkGeo, M.wood, trunks, 'tree-trunks'));
-  world.add(instanced(canopyGeo, M.leaf, canopies, 'tree-canopies'));
+  world.add(instanced(trunkGeo, M.bark, trunks, 'tree-trunks'));
+  // every tree the same green is another tell — vary it per instance
+  const canopyMesh = instanced(canopyGeo, M.leaf, canopies, 'tree-canopies');
+  const tint = new THREE.Color();
+  canopies.forEach((_, i) => {
+    const v = ((i * 2654435761) >>> 0) / 4294967296;
+    tint.setHSL(0.22 + v * 0.06, 0.3 + v * 0.16, 0.36 + v * 0.16);
+    canopyMesh.setColorAt(i, tint);
+  });
+  canopyMesh.instanceColor.needsUpdate = true;
+  world.add(canopyMesh);
   world.add(instanced(boxGeo(2.1, 0.68, 0.8, 0.9), M.leaf, hedges, 'hedges'));
 
   const poleGeo = cylGeo(0.08, 0.12, 4.6, 8, 0.7).translate(0, 2.3, 0);
@@ -723,6 +777,15 @@ export function createSociety(host) {
   world.updateMatrixWorld(true);
   world.matrixWorldAutoUpdate = false;
 
+  /* Rendered straight to the canvas, no post-processing chain.
+     An earlier pass added GTAO ambient occlusion here. It looked better, but
+     it costs a depth+normal prepass, the AO pass and a denoise every frame on
+     top of a half-float multisampled target, and that is what made the page
+     lag. Direct rendering also gets hardware MSAA back for free from the
+     renderer's own `antialias` flag, which is the cheapest anti-aliasing
+     available and the thing that keeps the thin railings and window frames
+     from crawling. */
+
   // Paint the surfaces after the first frames are already on screen — the page
   // gets its backdrop immediately and the detail arrives a beat later.
   let surfaces = null;
@@ -779,9 +842,41 @@ export function createSociety(host) {
   addEventListener('resize', build);
   addEventListener('load', build);
 
+  /* The camera reads a smoothed copy of the scroll position rather than
+     scrollY itself. A wheel scroll arrives as a train of ~90 px jumps, and
+     feeding that straight in is what makes the move and the zoom lurch.
+
+     This is a critically damped spring rather than a plain lerp on purpose. A
+     lerp snaps its velocity the instant the target moves, so a stepped input
+     comes out as a train of little surges — measurably so: frame-to-frame
+     camera speed varied by ~94% of its own mean. A spring carries velocity
+     across the steps and never overshoots. */
+  const SMOOTH_TIME = 0.45; // seconds for the follower to close the gap
+  let scrollSmooth = scrollY;
+  let scrollVel = 0;
+
+  const followScroll = (dt) => {
+    const target = scrollY;
+    const h = dt / 1000;
+    const omega = 2 / SMOOTH_TIME;
+    const x = omega * h;
+    const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+    const change = scrollSmooth - target;
+    const temp = (scrollVel + omega * change) * h;
+    scrollVel = (scrollVel - omega * temp) * exp;
+    scrollSmooth = target + (change + temp) * exp;
+    // Snap at a quarter of a pixel. A spring has an exponential tail, so
+    // insisting on 0.03px kept "still scrolling" true for seconds after the
+    // wheel stopped and the loop could never reach rest.
+    if (Math.abs(target - scrollSmooth) < 0.25 && Math.abs(scrollVel) < 3) {
+      scrollSmooth = target;
+      scrollVel = 0;
+    }
+  };
+
   const targets = () => {
     if (!table.length) return;
-    const y = scrollY + innerHeight * 0.42;
+    const y = scrollSmooth + innerHeight * 0.42;
     let i = 0;
     while (i < table.length - 1 && table[i + 1].top <= y) i++;
     const cur = table[i], nxt = table[i + 1] || cur;
@@ -792,38 +887,111 @@ export function createSociety(host) {
     wantFov = (cur.stop.f || 32) + ((nxt.stop.f || 32) - (cur.stop.f || 32)) * t;
   };
 
-  // If the GPU cannot hold the frame budget at full resolution, step down once
-  // rather than letting the whole page stutter.
-  let samples = 0;
-  let acc = 0;
-  const tune = (ms) => {
-    if (dpr <= 1 || samples > 45) return;
-    acc += ms;
-    if (++samples < 45) return;
-    if (acc / samples > 20) {
+  /* If the GPU cannot hold the frame budget at full resolution, step down once
+     rather than letting the whole page stutter.
+
+     This judges real frame intervals, not the time `renderer.render` takes to
+     return. WebGL submits work asynchronously, so the CPU side of that call
+     says almost nothing about GPU cost — timing it could drop the resolution
+     on a machine that was keeping up perfectly. Measurement also waits for the
+     surfaces to finish painting, otherwise that work lands inside the window
+     and looks like a slow GPU. */
+  let winMs = 0;
+  let winFrames = 0;
+  let tuned = false;
+  const tune = (dt) => {
+    if (tuned || dpr <= 1 || !surfaces) return;
+    winMs += dt;
+    winFrames++;
+    if (winMs < 1500) return;
+    if (winMs / winFrames > 22) {
       dpr = dpr > 1.5 ? 1.5 : 1;
       renderer.setPixelRatio(dpr);
       resize();
-      samples = 0;
-      acc = 0;
+      if (dpr <= 1) tuned = true;
+    } else {
+      tuned = true;
     }
+    winMs = 0;
+    winFrames = 0;
   };
 
-  let lastY = -1, clock = 0, lastT = 0, raf = 0, alive = true;
+  /* Motion runs at the display's own refresh rate. The original capped itself
+     to one frame every 32 ms, which is what made the moves and the zoom look
+     stepped; the smoothing below is exponential on elapsed time instead of
+     per-frame, so the camera travels at exactly the same speed whether the
+     screen is 30, 60 or 144 Hz — it just draws more in-between frames. */
+  const FOLLOW = 0.14; // per 60 Hz frame, kept from the original
+  const SWAY = 0.0009375; // clock units per ms — the original's 0.03 per 32 ms
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* Every frame is drawn *while anything is moving*, and none are drawn once
+     everything has come to rest.
+
+     The distinction matters. An earlier version skipped frames mid-scroll
+     whenever the camera briefly counted as "settled" between scroll deltas,
+     which delivered roughly every other frame and read as the zoom
+     fluctuating. Going quiet at genuine rest is a different thing and costs
+     nothing visually — but it is worth a lot, because the glass panels above
+     use backdrop-filter, and every frame this canvas paints forces the
+     browser to re-blur the backdrop behind every one of them. Idling here
+     idles the whole page. */
+  const dbg = location.search.includes('stats') ? {} : null;
+  const IDLE_GRACE = 900; // keep drawing this long after the last movement
+  let clock = 0, prev = 0, raf = 0, alive = true, snapped = false, restMs = 0;
   function frame(now) {
     if (!alive) return;
     raf = requestAnimationFrame(frame);
-    const settled =
-      camPos.distanceToSquared(wantPos) + camTgt.distanceToSquared(wantTgt) + Math.abs(wantFov - fov) < 0.0006;
-    if (settled && scrollY === lastY && !needs) return;
-    if (now - lastT < 32) return;
-    lastT = now || 0;
-    lastY = scrollY;
-    clock += 0.03;
+    if (document.hidden) {
+      prev = 0; // do not carry a huge dt back in when the tab returns
+      return;
+    }
+    const dt = prev ? Math.min(now - prev, 64) : 16.667;
+    prev = now;
+
+    const scrolling = scrollSmooth !== scrollY;
+    followScroll(dt);
     targets();
-    camPos.lerp(wantPos, 0.14);
-    camTgt.lerp(wantTgt, 0.14);
-    fov += (wantFov - fov) * 0.14;
+
+    if (!snapped) {
+      // land on the right stop straight away — on a reload part-way down the
+      // page there is nothing to fly in from
+      snapped = true;
+      scrollSmooth = scrollY;
+      scrollVel = 0;
+      targets();
+      camPos.copy(wantPos);
+      camTgt.copy(wantTgt);
+      fov = wantFov;
+    } else {
+      const k = 1 - Math.pow(1 - FOLLOW, dt / 16.667);
+      camPos.lerp(wantPos, k);
+      camTgt.lerp(wantTgt, k);
+      fov += (wantFov - fov) * k;
+    }
+
+    /* Rest detection. The grace period keeps frames flowing for a beat after
+       the camera arrives so the settle never clips, then the loop stops
+       drawing entirely until the next scroll, resize or texture swap. */
+    /* Thresholds are set at the point the eye stops being able to tell, not at
+       the point the float stops changing. 2e-5 squared world units is ~4 mm of
+       camera travel seen from 50 units away, and 0.004° of field of view is
+       nothing — but the exponential tail below them runs for seconds, which is
+       seconds of pointless full-page repainting. */
+    const posErr = camPos.distanceToSquared(wantPos) + camTgt.distanceToSquared(wantTgt);
+    const moving = scrolling || posErr > 2e-5 || Math.abs(wantFov - fov) > 0.004;
+    restMs = moving || needs ? 0 : restMs + dt;
+    if (dbg) {
+      dbg.restMs = restMs;
+      dbg.scrolling = scrolling;
+      dbg.camErr = camPos.distanceToSquared(wantPos) + camTgt.distanceToSquared(wantTgt) + Math.abs(wantFov - fov);
+      dbg.needs = needs;
+      dbg.gap = scrollY - scrollSmooth;
+    }
+    if (restMs > IDLE_GRACE) return;
+
+    if (!reduceMotion) clock += dt * SWAY;
+
     camera.fov = fov;
     camera.updateProjectionMatrix();
     camera.position.copy(camPos);
@@ -831,9 +999,8 @@ export function createSociety(host) {
     camera.position.x += Math.sin(clock * 0.31) * 0.07;
     camera.lookAt(camTgt);
     camera.rotation.z += Math.sin(clock * 0.23) * 0.004;
-    const t0 = performance.now();
     renderer.render(scene, camera);
-    tune(performance.now() - t0);
+    tune(dt);
     needs = false;
   }
   const onScroll = () => { needs = true; };
@@ -841,7 +1008,7 @@ export function createSociety(host) {
   frame();
 
   // opt-in diagnostics: append ?stats to the URL and read window.__society
-  if (location.search.includes('stats')) window.__society = { renderer, scene, camera };
+  if (location.search.includes('stats')) window.__society = { renderer, scene, camera, dbg };
 
   return function dispose() {
     disposed = true;

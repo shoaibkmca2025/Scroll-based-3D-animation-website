@@ -278,6 +278,83 @@ const painters = {
     speckle(g, s, s * 2, 131, 70, 170, 0.12);
   },
 
+  /* Car body paint. Painted near-white so each car's colour can tint it —
+     the character is in the metallic flake and the faint orange-peel of a
+     sprayed clearcoat. */
+  carPaint: (g, s) => {
+    g.fillStyle = '#f2f0ed';
+    g.fillRect(0, 0, s, s);
+    const r = rand(307);
+    for (let i = 0; i < s * 0.6; i++) {
+      const t = 236 + Math.round(r() * 18);
+      blob(g, r() * s, r() * s, s * (0.01 + r() * 0.035), 'rgba(' + t + ',' + t + ',' + t + ',0.1)', s);
+    }
+    speckle(g, s, s * 12, 311, 200, 255, 0.1);
+  },
+
+  // Tyre rubber with a circumferential tread.
+  tyre: (g, s) => {
+    g.fillStyle = '#22201e';
+    g.fillRect(0, 0, s, s);
+    const r = rand(331);
+    const rows = 18;
+    for (let i = 0; i < rows; i++) {
+      const y = (i / rows) * s;
+      g.fillStyle = 'rgba(' + (52 + Math.round(r() * 26)) + ',' + (50 + Math.round(r() * 24)) + ',' + (48 + Math.round(r() * 22)) + ',0.85)';
+      g.fillRect(0, y, s, s / rows * 0.52);
+      for (let k = 0; k < 26; k++) {
+        g.fillStyle = 'rgba(14,13,12,0.9)';
+        g.fillRect((k / 26) * s + (i % 2 ? s / 52 : 0), y, s / 90, (s / rows) * 0.52);
+      }
+    }
+    speckle(g, s, s * 3, 337, 20, 90, 0.3);
+  },
+
+  // Brushed metal for railings, poles and lamp arms.
+  metal: (g, s) => {
+    // Neutral grey on purpose — a warm base plus the sun's warm key reads as
+    // brass on poles and wheel hubs.
+    g.fillStyle = '#b7b7b4';
+    g.fillRect(0, 0, s, s);
+    const r = rand(353);
+    g.lineWidth = 1;
+    for (let i = 0; i < s * 6; i++) {
+      const y = r() * s;
+      const t = 140 + Math.round(r() * 90);
+      g.strokeStyle = 'rgba(' + t + ',' + t + ',' + (t - 8) + ',0.16)';
+      const x = r() * s;
+      g.beginPath();
+      g.moveTo(x, y);
+      g.lineTo(x + s * (0.05 + r() * 0.3), y);
+      g.stroke();
+    }
+  },
+
+  /* Still water. Only the normal map really matters here — the interference
+     of a dozen ring sets gives the surface something for the sky to break up
+     on, without anything actually moving. */
+  water: (g, s) => {
+    g.fillStyle = '#7f7f7f';
+    g.fillRect(0, 0, s, s);
+    const r = rand(373);
+    g.lineWidth = Math.max(1, s / 320);
+    for (let c = 0; c < 14; c++) {
+      const cx = r() * s;
+      const cy = r() * s;
+      const rings = 8 + Math.floor(r() * 12);
+      const step = s * (0.012 + r() * 0.02);
+      for (let i = 1; i <= rings; i++) {
+        const a = 0.16 * (1 - i / rings);
+        g.strokeStyle = 'rgba(' + (i % 2 ? 220 : 40) + ',' + (i % 2 ? 220 : 40) + ',' + (i % 2 ? 220 : 40) + ',' + a.toFixed(3) + ')';
+        wrapped(g, cx, cy, i * step, s, (px, py) => {
+          g.beginPath();
+          g.arc(px, py, i * step, 0, Math.PI * 2);
+          g.stroke();
+        });
+      }
+    }
+  },
+
   // Foliage.
   leaf: (g, s) => {
     g.fillStyle = '#5f7345';
@@ -312,10 +389,14 @@ export async function buildSurfaces({ size = 1024, aniso = 8 } = {}) {
     earth: { bump: 1.6, rough: [0.88, 1.0], detail: 1 },
     concrete: { bump: 2.2, rough: [0.72, 0.98], detail: 1 },
     tiles: { bump: 4.0, rough: [0.5, 0.85], detail: 1 },
+    carPaint: { bump: 0.35, detail: 0.5 },
     asphalt: { bump: 2.6, rough: [0.78, 0.99], detail: 0.5 },
     grass: { bump: 2.8, rough: [0.85, 1.0], detail: 0.5 },
     sand: { bump: 2.0, rough: [0.9, 1.0], detail: 0.5 },
     wood: { bump: 1.8, rough: [0.6, 0.92], detail: 0.5 },
+    tyre: { bump: 3.2, rough: [0.72, 0.95], detail: 0.5 },
+    metal: { bump: 0.8, rough: [0.2, 0.55], detail: 0.5 },
+    water: { bump: 1.1, detail: 0.5 },
     leaf: { bump: 2.4, detail: 0.5 }
   };
   for (const [name, draw] of Object.entries(painters)) {

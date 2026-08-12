@@ -41,8 +41,13 @@
   --color-accent-2-800: #3d472b;
   --color-accent-2-900: #272e1b;
 
-  --font-heading: 'Caprasimo', system-ui, sans-serif;
-  --font-heading-weight: 400;
+  /* Display face is Fraunces at a real 700 — warm and high-contrast without
+     going blocky; 900 was too heavy at hero sizes. SOFT rounds the terminals
+     and WONK turns on its quirkier letterforms; both are variable axes, so
+     they are set rather than picked as a style. */
+  --font-heading: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  --font-heading-weight: 700;
+  --font-heading-axes: 'SOFT' 40, 'WONK' 1;
   --font-body: 'Figtree', system-ui, sans-serif;
 
   --space-1: 4.4px;
@@ -70,6 +75,8 @@ body { margin: 0; font-size: 15px; line-height: 1.55; font-weight: 400; }
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: var(--font-heading-weight);
+  font-variation-settings: var(--font-heading-axes);
+  font-optical-sizing: auto;
   line-height: 1.12;
   letter-spacing: -0.015em;
   margin: 0 0 var(--space-2);
