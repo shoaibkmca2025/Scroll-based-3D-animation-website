@@ -1,6 +1,6 @@
-# ClearNest — React port
+# Grihive — React port
 
-A React + Vite rebuild of `ClearNest Website.dc.html`. The rendered page is
+A React + Vite rebuild of `Grihive Website.dc.html`. The rendered page is
 unchanged: same layout, type, colours, scroll reveals, progress bar, screens
 rail and 3D society backdrop. Only the code underneath is different.
 

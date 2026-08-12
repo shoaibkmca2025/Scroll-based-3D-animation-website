@@ -39,7 +39,7 @@ export default function App() {
       <Cta />
 
       <footer className="cn-footer">
-        <div>ClearNest — residential society management.</div>
+        <div>Grihive — residential society management.</div>
         <div>Clarity in how a community is run.</div>
       </footer>
     </div>

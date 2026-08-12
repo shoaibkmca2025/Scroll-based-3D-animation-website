@@ -11,7 +11,7 @@ export default function Cta() {
           <h2>Get your society onboarded.</h2>
           <p>
             Tell us about your society and we will set it up and walk your committee through it.
-            ClearNest is in live pilot with a small number of real societies.
+            Grihive is in live pilot with a small number of real societies.
           </p>
           <div className="cn-cta-note">
             Residents install one app.

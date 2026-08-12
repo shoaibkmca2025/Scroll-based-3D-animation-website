@@ -1,5 +1,5 @@
 @echo off
-REM Double-click this file to run the ClearNest React site.
+REM Double-click this file to run the Grihive React site.
 cd /d "%~dp0react"
 
 where node >nul 2>nul
@@ -20,7 +20,7 @@ if not exist "node_modules" (
 )
 
 echo.
-echo Starting ClearNest on http://localhost:5173
+echo Starting Grihive on http://localhost:5173
 echo Press Ctrl+C in this window to stop it.
 echo.
 call npm run dev -- --open

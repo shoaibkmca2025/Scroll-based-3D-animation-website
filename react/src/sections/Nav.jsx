@@ -4,7 +4,7 @@ export default function Nav() {
       <div className="cn-progress" data-progress-bar="1" />
       <a href="#top" className="cn-brand">
         <span className="cn-brand-mark" />
-        ClearNest
+        Grihive
       </a>
       <div className="cn-nav-links">
         <a href="#gate">The gate</a>

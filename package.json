@@ -1,5 +1,5 @@
 {
-  "name": "clearnest-site",
+  "name": "grihive-site",
   "private": true,
   "version": "1.0.0",
   "description": "Runs the React app in ./react from the project root, so `npm run dev` works from either folder.",
