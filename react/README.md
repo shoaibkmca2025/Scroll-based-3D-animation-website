@@ -30,7 +30,7 @@ has to be served — that is what the commands above do.
 | Copy hard-coded into `sc-for` template loops | `src/data.js` |
 | three.js fetched unminified from unpkg (2.0 MB) | bundled, minified, split into its own chunk and imported on mount |
 | The full 10.8 KB design-system stylesheet, of which only the tokens were used (the page has no `class` attributes) | `src/styles/tokens.css` — tokens plus the element defaults the page actually depends on |
-| `society3d.js` built six procedural noise textures on every load and assigned them to nothing | removed |
+| Flat-shaded blocks in solid colours, one draw call per object | a built society — PBR surfaces, image-based lighting, filmic tone mapping — in 33 draw calls |
 | Shadow map re-rendered every frame for a scene where nothing moves | rendered once (`shadowMap.autoUpdate = false`) |
 | Screenshots loaded eagerly with no dimensions | `loading="lazy"` with `width`/`height` so nothing shifts |
 

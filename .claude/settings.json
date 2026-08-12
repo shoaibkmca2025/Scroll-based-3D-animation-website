@@ -5,7 +5,11 @@
       "Bash(node shoot.mjs \"http://localhost:4177/\" new)",
       "Bash(node shoot.mjs \"http://localhost:4178/ClearNest%20Website.dc.html\" old)",
       "Bash(node node_modules/vite/bin/vite.js build)",
-      "Bash(rm -f new-*.png)"
+      "Bash(rm -f new-*.png)",
+      "Bash(rm -f new3d-*.png)",
+      "Bash(sed -i 's/new-\\\\${String/new3d-${String/' shoot.mjs)",
+      "Bash(node -e ' *)",
+      "Bash(node shoot.mjs \"http://localhost:5174/\" v2)"
     ]
   }
 }
