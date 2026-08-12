@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "description": "Runs the React app in ./react from the project root, so `npm run dev` works from either folder.",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "npm --prefix react install --no-audit --no-fund --silent && npm --prefix react run dev",
     "build": "npm --prefix react install --no-audit --no-fund --silent && npm --prefix react run build",
