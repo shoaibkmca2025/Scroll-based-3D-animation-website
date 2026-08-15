@@ -2,7 +2,7 @@ import { roleColumns, roleRows } from '../data.js';
 
 export default function Roles() {
   return (
-    <section id="roles" data-cam="roof" className="cn-sec">
+    <section id="roles" data-cam="roof" className="cn-sec cn-side cn-side--left" data-side="left">
       <div className="cn-roles-panel cn-surface cn-surface--cream">
         <div data-reveal="1" className="cn-kicker cn-kicker--neutral">
           Separation of powers

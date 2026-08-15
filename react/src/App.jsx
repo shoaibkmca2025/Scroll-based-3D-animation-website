@@ -1,5 +1,6 @@
 import Society3D from './components/Society3D.jsx';
 import useScrollFx from './hooks/useScrollFx.js';
+import useSmoothScroll from './hooks/useSmoothScroll.js';
 import Nav from './sections/Nav.jsx';
 import Hero from './sections/Hero.jsx';
 import Problem from './sections/Problem.jsx';
@@ -15,6 +16,7 @@ import Faq from './sections/Faq.jsx';
 import Cta from './sections/Cta.jsx';
 
 export default function App() {
+  useSmoothScroll();
   useScrollFx();
 
   return (

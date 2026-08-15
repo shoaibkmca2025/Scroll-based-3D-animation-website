@@ -2,7 +2,7 @@ import { railScreens } from '../data.js';
 
 export default function Screens() {
   return (
-    <section data-cam="parking" className="cn-screens">
+    <section data-cam="parking" className="cn-screens cn-side cn-side--right" data-side="right">
       <div className="cn-screens-head">
         <div data-reveal="1" className="cn-surface cn-surface--md cn-surface--cream">
           <div className="cn-kicker cn-kicker--neutral cn-mb12">Inside the app</div>

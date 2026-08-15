@@ -2,7 +2,12 @@
    document carried, collapsed into reusable classes. */
 
 /* ── document ─────────────────────────────────────────────────────── */
-html { scroll-behavior: smooth; }
+/* No `scroll-behavior: smooth` here. The smooth scrolling is driven from
+   JavaScript so the 3D camera can read the same eased position the page is
+   using; leaving the CSS property on as well means the browser runs its own
+   competing animation whenever anything calls scrollTo, and the two fight over
+   in-page anchor jumps. Where the JS layer is off — reduced motion — the
+   browser's instant jump is the correct behaviour anyway. */
 
 body {
   background: var(--color-bg);
@@ -144,38 +149,64 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   padding: clamp(60px, 9vw, 120px) clamp(24px, 7vw, 110px);
 }
 
-/* Panels stay genuinely see-through so the society keeps moving behind them.
-   Legibility comes from conditioning the backdrop rather than from hiding it:
-   the blur removes the high-frequency detail that breaks up letterforms (roof
-   tiles, foliage, window grids), and the brightness shift flattens the range
-   between a sunlit wall and a shadowed tower so text keeps its contrast
-   wherever the camera happens to be. Light panels lift the backdrop, dark
-   panels push it down.
+/* Text takes one half of the viewport, the society keeps the other.
+   Sides alternate down the page, and the camera leans its subject the
+   opposite way (see `data-side` in scene.js) so the two never fight for the
+   same pixels. Below 1024px there is no room to split, so content goes back
+   to full width and the panels carry more fill instead. */
+/* `[data-side]` is here to win on specificity, not to select: each panel sets
+   its own max-width and `margin: 0 auto` further down the file, which would
+   otherwise tie with a single class and win on source order. */
+@media (min-width: 1024px) {
+  .cn-side[data-side] > * {
+    max-width: min(660px, 49vw);
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .cn-side--right[data-side] > * { margin-left: auto; }
+  .cn-side--left[data-side] > * { margin-right: auto; }
 
-   One blurred layer per element and never nested — the cards inside a panel
-   deliberately have no backdrop-filter of their own, since each one is a
-   separate GPU pass. */
+  /* The screens rail is the one exception: it is a filmstrip of imagery, not
+     text, and half a column shows barely one and a half cards. Its heading
+     keeps the side column; the strip itself runs full width underneath, where
+     it only takes the middle band of the viewport and leaves the society
+     visible above and below it. */
+  .cn-screens[data-side] > .cn-rail { max-width: none; }
+
+  /* A section whose own layout is two columns would be halved twice and end
+     up with 300px of text. These collapse to one column inside the side. */
+  .cn-side[data-side] .cn-garden { grid-template-columns: 1fr; }
+  .cn-side[data-side] .cn-roles-table { min-width: 0; }
+  .cn-side[data-side] .cn-roles-table th,
+  .cn-side[data-side] .cn-roles-table td { padding-left: 10px; padding-right: 10px; }
+  .cn-side[data-side] .cn-roles-table th:first-child,
+  .cn-side[data-side] .cn-roles-table td:first-child { padding-left: 14px; padding-right: 14px; }
+}
+
+/* Panels are near-solid and carry no backdrop-filter.
+   They used to be see-through glass frosted over the scene, which needed a
+   blur+contrast+brightness pass on around nineteen elements. Every one of
+   those re-blurs its backdrop on each frame, and the backdrop here is a canvas
+   that repaints continuously — it was the single most expensive thing on the
+   page. Splitting text and scene onto opposite halves removes the need
+   entirely: nothing legible sits over the model any more. */
 .cn-surface {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(9px) saturate(0.9) contrast(0.42) brightness(1.5);
-  -webkit-backdrop-filter: blur(9px) saturate(0.9) contrast(0.42) brightness(1.5);
 }
 .cn-surface--md { box-shadow: var(--shadow-md); }
 .cn-surface--cream {
-  background: color-mix(in srgb, #f9f2e2 56%, transparent);
+  background: color-mix(in srgb, #faf4e6 96%, transparent);
   border: 1px solid color-mix(in srgb, #ffffff 66%, transparent);
 }
 .cn-surface--sage {
-  background: color-mix(in srgb, #e6f0d6 60%, transparent);
+  background: color-mix(in srgb, #e9f2dc 96%, transparent);
   border: 1px solid color-mix(in srgb, #ffffff 60%, transparent);
 }
 .cn-surface--ink {
-  background: color-mix(in srgb, #2b2822 64%, transparent);
+  background: color-mix(in srgb, #2b2822 96%, transparent);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: var(--color-neutral-100);
-  backdrop-filter: blur(9px) saturate(0.85) contrast(0.45) brightness(0.42);
-  -webkit-backdrop-filter: blur(9px) saturate(0.85) contrast(0.45) brightness(0.42);
 }
 
 .cn-kicker {
@@ -299,14 +330,12 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .cn-gate-panel {
   max-width: 1140px;
   margin: 0 auto;
-  background: color-mix(in srgb, #a72608 72%, transparent);
+  background: color-mix(in srgb, #a72608 96%, transparent);
   border: 1px solid rgba(255, 255, 255, 0.26);
   color: #fff;
   border-radius: var(--radius-lg);
   padding: clamp(34px, 5vw, 68px);
   box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(9px) saturate(0.85) contrast(0.45) brightness(0.55);
-  -webkit-backdrop-filter: blur(9px) saturate(0.85) contrast(0.45) brightness(0.55);
 }
 .cn-gate-panel h2 { font-size: clamp(30px, 4.4vw, 58px); line-height: 1.05; margin: 0 0 14px; }
 .cn-gate-lede { font-size: 18px; max-width: 620px; opacity: 0.9; line-height: 1.6; margin: 0 0 48px; }
@@ -350,26 +379,22 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(9px) saturate(0.9) contrast(0.42) brightness(1.5);
-  -webkit-backdrop-filter: blur(9px) saturate(0.9) contrast(0.42) brightness(1.5);
 }
 .cn-aud--res {
-  background: color-mix(in srgb, #fffdf7 58%, transparent);
+  background: color-mix(in srgb, #fffdf7 96%, transparent);
   border: 1px solid color-mix(in srgb, #ffffff 68%, transparent);
   box-shadow: var(--shadow-lg);
 }
 .cn-aud--com {
-  background: color-mix(in srgb, #e7f1d8 62%, transparent);
+  background: color-mix(in srgb, #e9f2dc 96%, transparent);
   border: 1px solid color-mix(in srgb, #ffffff 60%, transparent);
   box-shadow: var(--shadow-lg);
 }
 .cn-aud--sec {
-  background: color-mix(in srgb, #2b2822 66%, transparent);
+  background: color-mix(in srgb, #2b2822 96%, transparent);
   color: var(--color-neutral-100);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(9px) saturate(0.85) contrast(0.45) brightness(0.42);
-  -webkit-backdrop-filter: blur(9px) saturate(0.85) contrast(0.45) brightness(0.42);
 }
 .cn-aud h3 { font-size: 28px; margin: 0 0 16px; }
 .cn-aud--sec h3 { color: #fff; }
@@ -504,12 +529,10 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   display: flex;
   flex-direction: column;
   padding: 16px 16px 22px;
-  background: color-mix(in srgb, #fffdf7 60%, transparent);
+  background: color-mix(in srgb, #fffdf7 96%, transparent);
   border: 1px solid color-mix(in srgb, #ffffff 66%, transparent);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  backdrop-filter: blur(9px) saturate(0.9) contrast(0.42) brightness(1.5);
-  -webkit-backdrop-filter: blur(9px) saturate(0.9) contrast(0.42) brightness(1.5);
   transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 .cn-rail-item:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
@@ -619,13 +642,11 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .cn-cta-panel {
   max-width: 1080px;
   margin: 0 auto;
-  background: color-mix(in srgb, #2b2822 64%, transparent);
+  background: color-mix(in srgb, #2b2822 96%, transparent);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
   border-radius: var(--radius-lg);
   padding: clamp(32px, 4.4vw, 66px);
-  backdrop-filter: blur(9px) saturate(0.85) contrast(0.45) brightness(0.42);
-  -webkit-backdrop-filter: blur(9px) saturate(0.85) contrast(0.45) brightness(0.42);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 48px;

@@ -2,7 +2,7 @@ import { audiences } from '../data.js';
 
 export default function Audiences() {
   return (
-    <section data-cam="towers" className="cn-sec">
+    <section data-cam="towers" className="cn-sec cn-side cn-side--right" data-side="right">
       <div className="cn-aud-wrap">
         <div className="cn-aud-intro cn-surface cn-surface--md cn-surface--cream">
           <h2 data-reveal="1">Three products, one backend.</h2>

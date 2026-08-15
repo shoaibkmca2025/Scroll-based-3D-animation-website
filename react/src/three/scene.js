@@ -63,6 +63,124 @@ function flatGeo(g, uvs) {
   return g;
 }
 
+// ── swept surfaces, for the cars ──────────────────────────────────────
+
+const smoothstep = (t) => t * t * (3 - 2 * t);
+
+/** A curve through keyed [t, value] points, smoothstepped between them so a
+    surface swept along it picks up no crease the keys did not ask for. */
+function curve(keys) {
+  return (t) => {
+    if (t <= keys[0][0]) return keys[0][1];
+    const last = keys[keys.length - 1];
+    if (t >= last[0]) return last[1];
+    let i = 0;
+    while (keys[i + 1][0] < t) i++;
+    const [t0, v0] = keys[i];
+    const [t1, v1] = keys[i + 1];
+    return v0 + (v1 - v0) * smoothstep((t - t0) / (t1 - t0));
+  };
+}
+
+/* Sweeps a rounded cross-section along z, its width, roofline and underside
+   read from profile curves at every station.
+
+   `boxy` is the superellipse exponent: 1 gives a plain ellipse, below that the
+   section squares up while keeping its corners radiused, which is what a body
+   panel actually looks like in section. `belt` and `tumble` lean the sides in
+   above a given height — the tumblehome every car has and no box ever does.
+
+   With `band` the sweep covers only an arc rather than the full ring, which is
+   how the roof, the pillars and every light and bumper are laid on: the same
+   surface, a sliver of it, pushed `offset` metres straight out along its own
+   normal. Details built this way curve with the panel they sit on, which is
+   the whole difference between a tail light and a brick glued to a wing. */
+function sweep({
+  rings, seg, z0, z1, top, bot, half,
+  belt = 0, tumble = 0.26, boxy = 0.62, band = null, offset = 0, cap = false
+}) {
+  const pos = [];
+  const uv = [];
+  const idx = [];
+  const closed = !band;
+  const cols = closed ? seg : seg + 1;
+  const at = (v, t) => (typeof v === 'function' ? v(t) : v);
+
+  for (let i = 0; i < rings; i++) {
+    const t = i / (rings - 1);
+    const z = z0 + (z1 - z0) * t;
+    const yT = top(t);
+    const yB = bot(t);
+    const hw = half(t);
+    const cy = (yT + yB) / 2;
+    const hh = Math.max(0.012, (yT - yB) / 2);
+    for (let j = 0; j < cols; j++) {
+      const th = band
+        ? at(band.center, t) - at(band.half, t) + (2 * at(band.half, t) * j) / seg
+        : (j / seg) * TAU;
+      const c = Math.cos(th);
+      const s = Math.sin(th);
+      let y = cy + hh * Math.sign(s) * Math.pow(Math.abs(s), boxy);
+      let x = hw * Math.sign(c) * Math.pow(Math.abs(c), boxy);
+      if (belt && y > belt && yT > belt) {
+        x *= 1 - tumble * smoothstep(Math.min(1, (y - belt) / (yT - belt)));
+      }
+      if (offset) {
+        // straight out from the section's centre, which for a convex section
+        // is the surface normal to within a degree or two
+        const dy = y - cy;
+        const len = Math.hypot(x, dy) || 1;
+        x += (x / len) * offset;
+        y += (dy / len) * offset;
+      }
+      pos.push(x, y, z);
+      // the paint map is fine metallic flake, so the scale only has to be sane
+      uv.push((j / seg) * 1.8, t * Math.abs(z1 - z0) * 0.5);
+    }
+  }
+
+  for (let i = 0; i < rings - 1; i++) {
+    for (let j = 0; j < seg; j++) {
+      const jn = closed ? (j + 1) % seg : j + 1;
+      const a = i * cols + j;
+      const b = i * cols + jn;
+      const c = (i + 1) * cols + j;
+      const d = (i + 1) * cols + jn;
+      idx.push(a, c, b, b, c, d);
+    }
+  }
+
+  /* Close the two ends. Without this the body is a tube open at the bumpers,
+     and back-face culling turns each opening into a hole straight through. */
+  if (closed && cap) {
+    for (const ring of [0, rings - 1]) {
+      const t = ring / (rings - 1);
+      const centre = pos.length / 3;
+      pos.push(0, (top(t) + bot(t)) / 2, z0 + (z1 - z0) * t);
+      uv.push(0.5, 0.5);
+      for (let j = 0; j < seg; j++) {
+        const a = ring * cols + j;
+        const b = ring * cols + ((j + 1) % seg);
+        if (ring === 0) idx.push(centre, a, b);
+        else idx.push(centre, b, a);
+      }
+    }
+  }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Revolves a [radius, offset-along-axle] profile into a wheel part. */
+function wheelGeo(profile, seg) {
+  return new THREE.LatheGeometry(profile.map(([r, h]) => new THREE.Vector2(r, h)), seg)
+    .rotateZ(Math.PI / 2);
+}
+
 const _e = new THREE.Euler();
 const _q = new THREE.Quaternion();
 const _p = new THREE.Vector3();
@@ -201,50 +319,90 @@ function createMaterials() {
       std('car-paint-' + i, { color: c, roughness: 0.26, metalness: 0.5, envMapIntensity: 1.7 })
     ),
     white: std('paint-white', { color: 0xece7dc, roughness: 0.5 }),
-    lamp: std('lamp-lens', { color: 0xfff4dc, roughness: 0.3, emissive: 0xffe6b0, emissiveIntensity: 0.35 })
+    lamp: std('lamp-lens', { color: 0xfff4dc, roughness: 0.3, emissive: 0xffe6b0, emissiveIntensity: 0.35 }),
+    /* Headlamps are their own material, not the street lamps'. A parked car in
+       daylight has no lit lens — what you actually see is a clear cover over a
+       silvered reflector, which means something glossy that takes its
+       brightness from the sky. Borrowing the emissive lamp lens made every car
+       look like it had two squares of paper taped to the nose. */
+    headlamp: std('headlamp', { color: 0xdde3e6, roughness: 0.11, metalness: 0.25, envMapIntensity: 2.1 })
   };
 }
 
-/** Swaps the painted maps in once they exist. Colours go white so the map is
-    not tinted twice. */
-function applySurfaces(M, S) {
-  const put = (mat, set, { normal = 1, tint = 0xffffff, rough } = {}) => {
+/** Returns one thunk per material, each swapping that material's maps in and
+    handing back the textures it now uses. Colours go white so the map is not
+    tinted twice — anything still tinted below is deliberately shifting a scan
+    off its own colour, not re-applying it.
+
+    The caller runs these a frame apart rather than calling them in a loop.
+    Assigning a map to a material changes its shader permutation, so applying
+    all sixteen at once costs sixteen program compiles, every texture upload
+    and its mipmap chain, and a fresh shadow map — inside one frame. Measured
+    on an integrated Radeon that was a single 3.5 second freeze, which is the
+    whole of what the page felt like it was lagging on. One material per frame
+    is the same work spread over a quarter of a second, and none of it lands
+    while the camera is mid-move. */
+function surfaceSwaps(M, S) {
+  const put = (mat, set, { normal = 1, tint = 0xffffff, rough } = {}) => () => {
     mat.map = set.map;
     mat.normalMap = set.normalMap;
     mat.normalScale.set(normal, normal);
-    if (set.roughnessMap) mat.roughnessMap = set.roughnessMap;
+    if (set.armMap) {
+      /* One image, three slots. The scans pack ambient occlusion into red,
+         roughness into green and metalness into blue — exactly the channels
+         three.js already reads each of those maps from, so the same texture
+         can be bound to all three and the GPU samples it once.
+         `roughness` then goes to 1 so the measured values pass through
+         unscaled; a multiplier here would only be second-guessing the scan. */
+      mat.aoMap = set.armMap;
+      mat.aoMapIntensity = 0.75;
+      mat.roughnessMap = set.armMap;
+      if (rough === undefined) mat.roughness = 1;
+    } else if (set.roughnessMap) mat.roughnessMap = set.roughnessMap;
     if (rough !== undefined) mat.roughness = rough;
     mat.color.setHex(tint);
     mat.needsUpdate = true;
+    return set;
   };
-  put(M.plaster, S.plaster, { normal: 0.35, tint: 0xfffaf0 });
-  put(M.plasterWarm, S.plaster, { normal: 0.35, tint: 0xe8d5b4 });
-  put(M.earth, S.earth, { normal: 0.6 });
-  put(M.concrete, S.concrete, { normal: 0.7, tint: 0xf2ece0 });
-  put(M.asphalt, S.asphalt, { normal: 0.7 });
-  put(M.grass, S.grass, { normal: 0.9 });
-  put(M.sand, S.sand, { normal: 0.7 });
-  put(M.tiles, S.tiles, { normal: 1.2 });
-  put(M.trim, S.tiles, { normal: 0.8, tint: 0xe4a273, rough: 0.66 });
-  put(M.deep, S.concrete, { normal: 0.5, tint: 0x7d4118 });
-  put(M.wood, S.wood, { normal: 0.8 });
-  put(M.bark, S.wood, { normal: 1.1, tint: 0x8f7a5f });
-  put(M.leaf, S.leaf, { normal: 0.9 });
-  put(M.white, S.plaster, { normal: 0.3, tint: 0xe6e1d6 });
-  put(M.tyre, S.tyre, { normal: 0.9 });
-  put(M.metal, S.metal, { normal: 0.4 });
-  // Car paint keeps its colour: the map is near-white flake and clearcoat, so
-  // tinting it with the body colour is the whole point.
-  M.cars.forEach((mat) => {
-    mat.map = S.carPaint.map;
-    mat.normalMap = S.carPaint.normalMap;
-    mat.normalScale.set(0.3, 0.3);
-    mat.needsUpdate = true;
-  });
-  // Water is a normal map only — the colour and reflectivity are the material's.
-  M.water.normalMap = S.water.normalMap;
-  M.water.normalScale.set(0.55, 0.55);
-  M.water.needsUpdate = true;
+  return [
+    /* Ordered by how much of the frame each covers, so the surfaces that carry
+       the shot land first and the swap-in reads as detail arriving rather than
+       as a patchwork settling. */
+    put(M.plaster, S.plaster, { normal: 0.7, tint: 0xfff6e6 }),
+    put(M.concrete, S.concrete, { normal: 0.8, tint: 0xf2ece0 }),
+    put(M.earth, S.earth, { normal: 0.8, rough: 0.97 }),
+    put(M.grass, S.grass, { normal: 1.0, rough: 0.98 }),
+    put(M.tiles, S.tiles, { normal: 1.0 }),
+    put(M.plasterWarm, S.plaster, { normal: 0.7, tint: 0xe8d5b4 }),
+    put(M.asphalt, S.asphalt, { normal: 0.8, rough: 0.95 }),
+    put(M.white, S.plaster, { normal: 0.4, tint: 0xe6e1d6 }),
+    put(M.deep, S.concrete, { normal: 0.5, tint: 0x7d4118 }),
+    put(M.trim, S.tiles, { normal: 0.8, tint: 0xe4a273, rough: 0.66 }),
+    put(M.leaf, S.leaf, { normal: 0.9, rough: 0.94 }),
+    put(M.sand, S.sand, { normal: 0.9, rough: 0.99 }),
+    put(M.wood, S.wood, { normal: 0.9 }),
+    put(M.bark, S.wood, { normal: 1.1, tint: 0x8f7a5f }),
+    put(M.metal, S.metal, { normal: 0.4 }),
+    put(M.tyre, S.tyre, { normal: 0.9 }),
+    // Car paint keeps its colour: the map is near-white flake and clearcoat, so
+    // tinting it with the body colour is the whole point.
+    () => {
+      M.cars.forEach((mat) => {
+        mat.map = S.carPaint.map;
+        mat.normalMap = S.carPaint.normalMap;
+        mat.normalScale.set(0.3, 0.3);
+        mat.needsUpdate = true;
+      });
+      return S.carPaint;
+    },
+    // Water is a normal map only — the colour and reflectivity are the material's.
+    () => {
+      M.water.normalMap = S.water.normalMap;
+      M.water.normalScale.set(0.55, 0.55);
+      M.water.needsUpdate = true;
+      return S.water;
+    }
+  ];
 }
 
 // ── the model ─────────────────────────────────────────────────────────
@@ -267,15 +425,22 @@ function buildWorld(M) {
   const lampHeads = [];
   const lampLenses = [];
 
-  // ── ground plane, drive and paths ──
-  B.add(flatGeo(new THREE.CircleGeometry(78, 72), 0.09), M.earth, TRS(0, 0, 0, -Math.PI / 2));
+  /* ── ground plane, drive and paths ──
+     The ground repeats roughly every 3–4 m rather than every 6–11 m as it used
+     to. A painted texture was pure high-frequency grain and survived being
+     stretched that far; a photograph does not — its macro features come with a
+     real-world size, and spreading a metre of dirt over eleven turns gravel
+     into boulders and blades of grass into fronds. */
+  B.add(flatGeo(new THREE.CircleGeometry(78, 72), 0.26), M.earth, TRS(0, 0, 0, -Math.PI / 2));
 
   // lawn inside the ring drive, and green verges outside the boundary
-  B.add(flatGeo(new THREE.CircleGeometry(16, 56), 0.14), M.grass, TRS(0, 0.012, 0, -Math.PI / 2));
-  B.add(flatGeo(new THREE.RingGeometry(34, 52, 72), 0.1), M.grass, TRS(0, 0.012, 0, -Math.PI / 2));
+  // the inner lawn is the one the camera comes close to, so it repeats tighter
+  // than the far verges, where a 2.5 m tile would show its seams across 100 m
+  B.add(flatGeo(new THREE.CircleGeometry(16, 56), 0.4), M.grass, TRS(0, 0.012, 0, -Math.PI / 2));
+  B.add(flatGeo(new THREE.RingGeometry(34, 52, 72), 0.3), M.grass, TRS(0, 0.012, 0, -Math.PI / 2));
 
-  B.add(flatGeo(new THREE.RingGeometry(17, 21, 72), 0.16), M.asphalt, TRS(0, 0.02, 0, -Math.PI / 2));
-  B.add(boxGeo(5, 0.04, 16, 0.16), M.asphalt, TRS(0, 0.02, 26));
+  B.add(flatGeo(new THREE.RingGeometry(17, 21, 72), 0.34), M.asphalt, TRS(0, 0.02, 0, -Math.PI / 2));
+  B.add(boxGeo(5, 0.04, 16, 0.34), M.asphalt, TRS(0, 0.02, 26));
   // centre line down the entry road
   B.add(boxGeo(0.16, 0.02, 1.4, 0.6), M.white, TRS(0, 0.05, 20));
   B.add(boxGeo(0.16, 0.02, 1.4, 0.6), M.white, TRS(0, 0.05, 23));
@@ -456,7 +621,7 @@ function buildWorld(M) {
   {
     const gx = -24;
     const gz = 8;
-    B.add(flatGeo(new THREE.CircleGeometry(9.5, 56), 0.2), M.grass, TRS(gx, 0.03, gz, -Math.PI / 2));
+    B.add(flatGeo(new THREE.CircleGeometry(9.5, 56), 0.4), M.grass, TRS(gx, 0.03, gz, -Math.PI / 2));
     B.add(flatGeo(new THREE.RingGeometry(4.6, 5.6, 48), 0.55), M.sand, TRS(gx, 0.05, gz, -Math.PI / 2));
     B.add(flatGeo(new THREE.RingGeometry(9.4, 9.9, 56), 0.6), M.concrete, TRS(gx, 0.05, gz, -Math.PI / 2));
 
@@ -492,7 +657,7 @@ function buildWorld(M) {
   {
     const px = 25;
     const pz = 7;
-    B.add(flatGeo(new THREE.CircleGeometry(8, 48), 0.24), M.sand, TRS(px, 0.03, pz, -Math.PI / 2));
+    B.add(flatGeo(new THREE.CircleGeometry(8, 48), 0.34), M.sand, TRS(px, 0.03, pz, -Math.PI / 2));
     // 0.072, not 0.06: the boundary footpath ring is at 0.06 and this ring
     // crosses it (it spans 17.6–34.3 from the origin, the footpath 29.6–31.2),
     // so sharing a height would set the two z-fighting where they meet
@@ -530,34 +695,160 @@ function buildWorld(M) {
 
   // ── parking ──
   {
-    B.add(boxGeo(26, 0.08, 7, 0.2), M.asphalt, TRS(0, 0.05, 14));
+    B.add(boxGeo(26, 0.08, 7, 0.34), M.asphalt, TRS(0, 0.05, 14));
     // bay lines clear the apron's top face rather than resting exactly on it
     for (let i = -5; i <= 5; i++) B.add(boxGeo(0.11, 0.02, 6.4, 0.5), M.white, TRS(i * 2.3, 0.105, 14));
     B.add(boxGeo(26.4, 0.14, 0.3, 0.5), M.concrete, TRS(0, 0.07, 17.55));
 
+    /* ── the cars ──
+       These were six boxes stacked on four cylinders, and no amount of paint
+       rescues that silhouette. What reads as a car is a single continuous
+       surface: it narrows towards both bumpers in plan, leans inward above the
+       beltline, and has arches cut into it that the wheels sit *inside* rather
+       than beside. So the body is swept, not stacked — one skin driven by a
+       roofline, an underside and a plan taper, with the arches simply the
+       underside rising over each axle.
+
+       The cabin is a second sweep in glass, and the roof and pillars are thin
+       bands of that same surface laid a few millimetres proud of it. Building
+       them from the same profiles is what keeps the glass sitting truly flush
+       in the opening instead of hovering in front of it. */
+    const LEN = 4.32;
+    const HALF_W = 0.92;
+    const NOSE = LEN / 2;
+
+    // bonnet → cowl → boot lid. The cabin sits on top of this, not inside it.
+    const bodyTop = curve([
+      [0.00, 0.74], [0.05, 0.87], [0.14, 0.94], [0.28, 0.99],
+      [0.42, 1.01], [0.68, 1.02], [0.82, 1.06], [0.93, 1.04], [1.00, 0.93]
+    ]);
+    /* Sills at 0.30, lifting to 0.72 over each axle — that lift *is* the wheel
+       arch. Front axle sits at t=0.186 and rear at t=0.814, which is a 2.7 m
+       wheelbase under a 4.32 m car. */
+    const bodyBot = curve([
+      [0.00, 0.50], [0.07, 0.40], [0.12, 0.55], [0.186, 0.72], [0.25, 0.55],
+      [0.31, 0.30], [0.70, 0.30],
+      [0.76, 0.55], [0.814, 0.72], [0.88, 0.55], [0.94, 0.40], [1.00, 0.52]
+    ]);
+    const bodyHalf = curve([
+      [0.00, 0.60], [0.05, 0.82], [0.13, 0.95], [0.30, 1.00],
+      [0.72, 1.00], [0.87, 0.95], [0.95, 0.84], [1.00, 0.62]
+    ]);
+
+    // the greenhouse, in its own 0→1 running from windscreen base to backlight
+    const CAB_0 = NOSE - 0.30 * LEN;
+    const CAB_1 = NOSE - 0.82 * LEN;
+    const cabTop = curve([
+      [0.00, 1.00], [0.10, 1.14], [0.30, 1.42], [0.42, 1.475],
+      [0.60, 1.48], [0.70, 1.44], [0.85, 1.24], [1.00, 1.02]
+    ]);
+    const cabBot = curve([[0.00, 0.96], [1.00, 0.98]]);
+    const cabHalf = curve([
+      [0.00, 0.62], [0.12, 0.80], [0.30, 0.87], [0.62, 0.88], [0.80, 0.84], [1.00, 0.62]
+    ]);
+
+    const cabin = { rings: 26, seg: 24, z0: CAB_0, z1: CAB_1, top: cabTop, bot: cabBot, belt: 1.02, tumble: 0.3 };
+    const body = {
+      rings: 40, seg: 28, z0: NOSE, z1: -NOSE,
+      top: bodyTop, bot: bodyBot, half: (t) => bodyHalf(t) * HALF_W,
+      // squarer than the default: a shoulder that rolls over too softly is
+      // what makes a body read as a bar of soap rather than pressed steel
+      belt: 0.94, tumble: 0.1, boxy: 0.54
+    };
+    const bodyGeo = sweep({ ...body, cap: true });
+    const glassGeo = sweep({ ...cabin, half: (t) => cabHalf(t) * HALF_W });
+    // roof panel: a band across the top, widening at each end into the pillars
+    const roofGeo = sweep({
+      ...cabin, half: (t) => cabHalf(t) * HALF_W, offset: 0.008,
+      band: { center: Math.PI / 2, half: curve([[0.00, 0.95], [0.30, 0.74], [0.62, 0.74], [1.00, 0.92]]) }
+    });
+    /* B-pillar: the same skin again, a short arc down each flank mid-cabin.
+       Every profile has to be remapped into the slice — `sweep` always walks
+       its own 0→1, so handing it the cabin's curves unremapped would squeeze
+       the entire roofline into these few centimetres and spit out a spike. */
+    const pillarBand = (side) => {
+      const a = 0.47;
+      const b = 0.545;
+      return sweep({
+        ...cabin, rings: 6, seg: 4,
+        z0: CAB_0 + (CAB_1 - CAB_0) * a, z1: CAB_0 + (CAB_1 - CAB_0) * b,
+        top: (u) => cabTop(a + (b - a) * u),
+        bot: (u) => cabBot(a + (b - a) * u),
+        half: (u) => cabHalf(a + (b - a) * u) * HALF_W,
+        offset: 0.006,
+        band: { center: side * 0.66, half: 0.62 }
+      });
+    };
+
+    /* Lights, bumpers and plates, each a patch of the body's own skin rather
+       than a box parked next to it. `t0`/`t1` are positions along the car and
+       `center`/`half` an arc around it, so every one of them wraps the panel
+       it belongs to and stays inside the silhouette. */
+    const trim = (t0, t1, center, halfArc, offset) =>
+      sweep({
+        rings: 7, seg: 7, z0: NOSE - t0 * LEN, z1: NOSE - t1 * LEN,
+        top: (u) => bodyTop(t0 + (t1 - t0) * u),
+        bot: (u) => bodyBot(t0 + (t1 - t0) * u),
+        half: (u) => bodyHalf(t0 + (t1 - t0) * u) * HALF_W,
+        belt: 0.94, tumble: 0.1, boxy: 0.54, offset,
+        band: { center, half: halfArc }
+      });
+    const LOW = -Math.PI / 2; // wrapping the underside of a bumper
+    const bumperF = trim(0.0, 0.062, LOW, 1.25, 0.007);
+    const bumperR = trim(0.94, 1.0, LOW, 1.25, 0.007);
+    const plateF = trim(0.008, 0.026, LOW, 0.2, 0.014);
+    const plateR = trim(0.976, 0.994, LOW, 0.2, 0.014);
+    const lamps = [1, -1].map((side) => trim(0.018, 0.080, side > 0 ? 0.78 : Math.PI - 0.78, 0.27, 0.008));
+    const tails = [1, -1].map((side) => trim(0.926, 0.988, side > 0 ? 0.76 : Math.PI - 0.76, 0.30, 0.008));
+
+    const tyreGeo = wheelGeo(
+      [[0.175, -0.105], [0.255, -0.105], [0.30, -0.092], [0.325, -0.070],
+        [0.335, -0.030], [0.335, 0.030], [0.325, 0.070], [0.30, 0.092],
+        [0.255, 0.105], [0.175, 0.105]],
+      22
+    );
+    /* The tread is painted once across the map, and a lathe hands it one tile
+       for the whole wheel — 26 blocks around and 18 across, which comes out
+       looking like a tractor tyre. Repeated around and compressed across, the
+       same map gives about 80 blocks round and 5 across, which is a car's. */
+    {
+      const uv = tyreGeo.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 3, uv.getY(i) * 0.3);
+    }
+    const rimGeo = wheelGeo(
+      [[0.0, 0.070], [0.055, 0.084], [0.12, 0.081], [0.168, 0.060], [0.178, 0.020], [0.178, -0.02]],
+      20
+    );
+
     [-8.1, -3.4, 1.2, 8.0].forEach((cx, i) => {
       const paint = M.cars[i];
-      /* Built up from stacked slabs of decreasing width instead of one box.
-         A real body is never a rectangular prism — it tucks in towards the
-         sills and again towards the roof, and those chamfers catch the sun as
-         thin highlights. That silhouette is most of what separates a car from
-         a brick at this distance. */
-      B.add(boxGeo(1.74, 0.16, 4.06, 0.5), paint, TRS(cx, 0.44, 14)); // lower tuck
-      B.add(boxGeo(1.86, 0.34, 4.1, 0.5), paint, TRS(cx, 0.63, 14)); // main body
-      B.add(boxGeo(1.8, 0.14, 3.9, 0.5), paint, TRS(cx, 0.86, 14)); // shoulder
-      B.add(boxGeo(1.62, 0.1, 2.5, 0.5), paint, TRS(cx, 0.96, 13.9)); // cant rail
-      B.add(boxGeo(1.5, 0.34, 2.16, 0.5), paint, TRS(cx, 1.14, 13.88)); // roof pillar line
-      B.add(boxGeo(1.34, 0.1, 1.9, 0.5), paint, TRS(cx, 1.33, 13.9)); // roof
-      B.add(boxGeo(1.54, 0.3, 1.92, 0.6), M.glass, TRS(cx, 1.15, 13.88));
-      [-0.56, 0.56].forEach((dx) => {
-        B.add(boxGeo(0.32, 0.1, 0.06, 1.4), M.lamp, TRS(cx + dx, 0.76, 16.02));
-        B.add(boxGeo(0.3, 0.09, 0.06, 1.4), M.red, TRS(cx + dx, 0.78, 11.97));
+      const at = TRS(cx, 0, 14);
+      const put = (geo, mat, m) => B.add(geo, mat, m ? at.clone().multiply(m) : at);
+
+      put(bodyGeo, paint);
+      put(roofGeo, paint);
+      put(pillarBand(1), paint);
+      put(pillarBand(-1), paint);
+      put(glassGeo, M.glass);
+
+      // wheels, tucked just inside the arches with a dark void behind the rim
+      [[-0.75, 1.35], [0.75, 1.35], [-0.75, -1.35], [0.75, -1.35]].forEach(([wx, wz]) => {
+        const w = TRS(wx, 0.335, wz);
+        const face = TRS(wx + Math.sign(wx) * 0.052, 0.335, wz);
+        put(tyreGeo, M.tyre, w);
+        put(cylGeo(0.172, 0.172, 0.2, 14, 0.9), M.plastic, TRS(wx, 0.335, wz, 0, 0, Math.PI / 2));
+        put(rimGeo, M.metal, face);
       });
-      B.add(boxGeo(1.9, 0.13, 0.14, 0.9), M.plastic, TRS(cx, 0.48, 16.02));
-      B.add(boxGeo(1.9, 0.13, 0.14, 0.9), M.plastic, TRS(cx, 0.48, 11.98));
-      [[-0.92, 1.4], [0.92, 1.4], [-0.92, -1.4], [0.92, -1.4]].forEach((wp) => {
-        B.add(cylGeo(0.34, 0.34, 0.2, 16, 0.7), M.tyre, TRS(cx + wp[0], 0.34, 14 + wp[1], 0, 0, Math.PI / 2));
-        B.add(cylGeo(0.16, 0.16, 0.22, 12, 0.9), M.metal, TRS(cx + wp[0], 0.34, 14 + wp[1], 0, 0, Math.PI / 2));
+
+      put(bumperF, M.plastic);
+      put(bumperR, M.plastic);
+      put(plateF, M.white);
+      put(plateR, M.white);
+      lamps.forEach((g) => put(g, M.headlamp));
+      tails.forEach((g) => put(g, M.red));
+      // door mirrors, sat on the beltline where the A-pillar meets the flank
+      [-1, 1].forEach((sx) => {
+        put(boxGeo(0.17, 0.085, 0.1, 1.2), M.plastic, TRS(sx * 0.94, 0.99, CAB_0 - 0.1, 0, 0, sx * 0.18));
       });
     });
   }
@@ -731,6 +1022,13 @@ export function createSociety(host) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.25;
+  /* Every material here is a stock three.js one — there is no hand-written GLSL
+     in this scene for the check to catch. What it does cost is real: verifying
+     a program means calling getProgramInfoLog, which blocks until the driver
+     has finished compiling and linking, and that is exactly the wait the async
+     compile below exists to avoid. Off, it also covers the shadow depth
+     programs, which `compileAsync` does not reach. */
+  renderer.debug.checkShaderErrors = false;
   renderer.shadowMap.enabled = true;
   // PCF is the default and the only percentage-closer filter left — three r184
   // deprecated PCFSoftShadowMap and silently falls back to this one. Softness
@@ -786,12 +1084,46 @@ export function createSociety(host) {
      available and the thing that keeps the thin railings and window frames
      from crawling. */
 
-  // Paint the surfaces after the first frames are already on screen — the page
-  // gets its backdrop immediately and the detail arrives a beat later.
+  /* Fetch the surfaces after the first frames are already on screen — the page
+     gets its backdrop immediately and the real materials arrive a beat later.
+
+     The half-size tier goes to phones and to anything advertising a small heap
+     or a metered connection. It is ~2 MB against ~10 MB, and on a screen that
+     narrow the full set would be paying for detail below one texel per pixel. */
+  const small = Math.min(innerWidth, innerHeight) < 700;
+  const thin = navigator.connection?.saveData || (navigator.deviceMemory || 8) <= 4;
   let surfaces = null;
   let disposed = false;
+  let uploads = null; // textures still to be pushed to the GPU, one per frame
+
+  /* Nothing is drawn while the driver is building shader programs.
+
+     Assigning a map to a material changes its shader permutation, and three
+     checks the new program's link status the moment that program is first
+     used — a check that blocks the main thread until the driver has finished
+     compiling. Profiling the load, that one function (`onFirstUse`) accounted
+     for 4.0 s of frozen page, dwarfing every other cost including the texture
+     uploads at 0.47 s. `compileAsync` builds the same programs through
+     KHR_parallel_shader_compile, on the driver's own threads, and resolves
+     when they are genuinely ready.
+
+     Pausing rendering across that window is the point: the canvas simply holds
+     its last frame while the page above it stays completely responsive, which
+     is a far better trade than a smooth backdrop bought with a locked tab. */
+  let compiling = false;
+  const warm = () => {
+    compiling = true;
+    renderer.compileAsync(scene, camera).then(() => {
+      if (disposed) return;
+      compiling = false;
+      renderer.shadowMap.needsUpdate = true;
+      needs = true;
+    });
+  };
+
   buildSurfaces({
-    size: Math.min(innerWidth, innerHeight) < 700 ? 512 : 1024,
+    tier: small || thin ? 'low' : 'high',
+    size: small ? 512 : 1024,
     aniso: Math.min(8, renderer.capabilities.getMaxAnisotropy())
   }).then((s) => {
     if (disposed) {
@@ -799,10 +1131,25 @@ export function createSociety(host) {
       return;
     }
     surfaces = s;
-    applySurfaces(M, s);
-    renderer.shadowMap.needsUpdate = true;
+    // de-duplicated: plaster backs three materials, and its maps upload once
+    uploads = [...new Set(Object.values(s).flatMap((set) => Object.values(set)))];
     needs = true;
   });
+
+  /* Pushes one texture to the GPU per frame, then switches every material over
+     in one go. An upload and its mipmap chain is real GPU work — a 2048² map
+     costs more than a frame's budget on integrated graphics — but it compiles
+     nothing, so the scene keeps drawing throughout. Only once the pixels are
+     all resident do the materials change, and that cost is handed to `warm`. */
+  const prepareSurfaces = () => {
+    if (!uploads) return;
+    renderer.initTexture(uploads.pop());
+    needs = true;
+    if (uploads.length) return;
+    uploads = null;
+    for (const step of surfaceSwaps(M, surfaces)) step();
+    warm();
+  };
 
   // ── scroll-driven camera (unchanged) ──
   const camPos = new THREE.Vector3(...STOPS.wide.p);
@@ -811,6 +1158,10 @@ export function createSociety(host) {
   const wantTgt = camTgt.clone();
   const a = new THREE.Vector3(), b = new THREE.Vector3();
   let fov = STOPS.wide.f, wantFov = fov;
+  // the zoom's own spring state — see the frame loop for why it is not a lerp
+  const zoom = { value: fov, vel: 0 };
+  const ZOOM_TIME = 0.28; // seconds for the field of view to settle
+  let side = 1, wantSide = 1; // which way the subject leans; +1 = pushed right
   let needs = true;
 
   const resize = () => {
@@ -824,6 +1175,20 @@ export function createSociety(host) {
   ro.observe(host);
   resize();
 
+  /* The untextured scene has its own set of programs, and the first frame would
+     otherwise stop to build every one of them. Start them now, in the
+     background, so the backdrop arrives when it can be drawn without a stall.
+
+     Holding this back until the scans land — one set of programs instead of
+     two — was measurably worse, not better: the scans do not reliably beat the
+     first frame, so the wait usually bought a second compile *and* a later
+     backdrop. */
+  warm();
+
+  /* Read once, up here, because it decides how hard the camera has to work to
+     smooth the scroll as well as whether it sways. */
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const ease = (t) => t * t * (3 - 2 * t);
 
   // cached section table — rebuilt on layout change, never per frame
@@ -832,7 +1197,9 @@ export function createSociety(host) {
     table = Array.from(document.querySelectorAll('[data-cam]'))
       .map((el) => ({
         top: el.getBoundingClientRect().top + scrollY,
-        stop: STOPS[el.dataset.cam] || STOPS.wide
+        stop: STOPS[el.dataset.cam] || STOPS.wide,
+        // text on the left wants the subject pushed right, and vice versa
+        side: el.dataset.side === 'left' ? 1 : el.dataset.side === 'right' ? -1 : 0
       }))
       .sort((x, y) => x.top - y.top);
     needs = true;
@@ -843,40 +1210,53 @@ export function createSociety(host) {
   addEventListener('load', build);
 
   /* The camera reads a smoothed copy of the scroll position rather than
-     scrollY itself. A wheel scroll arrives as a train of ~90 px jumps, and
-     feeding that straight in is what makes the move and the zoom lurch.
+     scrollY itself, and the zoom below rides the same solver.
 
      This is a critically damped spring rather than a plain lerp on purpose. A
      lerp snaps its velocity the instant the target moves, so a stepped input
      comes out as a train of little surges — measurably so: frame-to-frame
      camera speed varied by ~94% of its own mean. A spring carries velocity
-     across the steps and never overshoots. */
-  const SMOOTH_TIME = 0.45; // seconds for the follower to close the gap
-  let scrollSmooth = scrollY;
-  let scrollVel = 0;
+     across the steps and never overshoots.
 
-  const followScroll = (dt) => {
-    const target = scrollY;
-    const h = dt / 1000;
-    const omega = 2 / SMOOTH_TIME;
+     How long it needs to be depends on what is feeding it. The page now eases
+     its own scrolling, so scrollY arrives as a continuous ramp and the camera
+     only has to track it — a long spring on top of that is not smoother, just
+     late, and the backdrop visibly trails the text. Where the page is scrolling
+     natively (reduced motion) the old 0.45 s is still what absorbs a wheel
+     notch's ~100 px jump. */
+  const SMOOTH_TIME = reduceMotion ? 0.45 : 0.14;
+
+  /* One step of the solver, on a `{ value, vel }` pair. Pulled out of the
+     scroll follower so the zoom can use exactly the same curve — the two are
+     driven by the same gesture and want the same character of movement, and
+     writing it twice is how they drift apart. */
+  const stepSpring = (s, target, smoothTime, h) => {
+    const omega = 2 / smoothTime;
     const x = omega * h;
     const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
-    const change = scrollSmooth - target;
-    const temp = (scrollVel + omega * change) * h;
-    scrollVel = (scrollVel - omega * temp) * exp;
-    scrollSmooth = target + (change + temp) * exp;
+    const change = s.value - target;
+    const temp = (s.vel + omega * change) * h;
+    s.vel = (s.vel - omega * temp) * exp;
+    s.value = target + (change + temp) * exp;
+    return s.value;
+  };
+
+  const scroll = { value: scrollY, vel: 0 };
+  const followScroll = (dt) => {
+    const target = scrollY;
+    stepSpring(scroll, target, SMOOTH_TIME, dt / 1000);
     // Snap at a quarter of a pixel. A spring has an exponential tail, so
     // insisting on 0.03px kept "still scrolling" true for seconds after the
     // wheel stopped and the loop could never reach rest.
-    if (Math.abs(target - scrollSmooth) < 0.25 && Math.abs(scrollVel) < 3) {
-      scrollSmooth = target;
-      scrollVel = 0;
+    if (Math.abs(target - scroll.value) < 0.25 && Math.abs(scroll.vel) < 3) {
+      scroll.value = target;
+      scroll.vel = 0;
     }
   };
 
   const targets = () => {
     if (!table.length) return;
-    const y = scrollSmooth + innerHeight * 0.42;
+    const y = scroll.value + innerHeight * 0.42;
     let i = 0;
     while (i < table.length - 1 && table[i + 1].top <= y) i++;
     const cur = table[i], nxt = table[i + 1] || cur;
@@ -885,6 +1265,37 @@ export function createSociety(host) {
     a.set(...cur.stop.p); b.set(...nxt.stop.p); wantPos.copy(a).lerp(b, t);
     a.set(...cur.stop.t); b.set(...nxt.stop.t); wantTgt.copy(a).lerp(b, t);
     wantFov = (cur.stop.f || 32) + ((nxt.stop.f || 32) - (cur.stop.f || 32)) * t;
+    wantSide = cur.side + (nxt.side - cur.side) * t;
+  };
+
+  /* Every stop centres its subject, so a half-width column of text would still
+     land on top of it. This slides the whole view sideways — camera and target
+     together, so there is no distortion, only a change of framing — by a
+     fraction of the visible width at the subject's distance. Moving the eye
+     left pushes the subject right, into the half the text has left free. */
+  const _right = new THREE.Vector3();
+  const _fwd = new THREE.Vector3();
+  const _viewPos = new THREE.Vector3();
+  const _viewTgt = new THREE.Vector3();
+  const FRAME_SHIFT = 0.26; // of half-width, so about a quarter of the frame
+
+  /* Writes the framed eye/target into the scratch pair. The offset must not go
+     back into camPos/camTgt — those carry the lerped state, and folding the
+     shift into them every frame would make it accumulate and walk the camera
+     off the site. */
+  const framedView = (shift) => {
+    _viewPos.copy(camPos);
+    _viewTgt.copy(camTgt);
+    if (!shift || innerWidth < 1024) return;
+    _fwd.subVectors(camTgt, camPos);
+    const dist = _fwd.length();
+    if (dist < 0.001) return;
+    _fwd.divideScalar(dist);
+    _right.crossVectors(_fwd, camera.up).normalize();
+    const halfW = Math.tan((fov * Math.PI) / 360) * dist * camera.aspect;
+    const off = -shift * halfW * FRAME_SHIFT;
+    _viewPos.addScaledVector(_right, off);
+    _viewTgt.addScaledVector(_right, off);
   };
 
   /* If the GPU cannot hold the frame budget at full resolution, step down once
@@ -894,13 +1305,14 @@ export function createSociety(host) {
      return. WebGL submits work asynchronously, so the CPU side of that call
      says almost nothing about GPU cost — timing it could drop the resolution
      on a machine that was keeping up perfectly. Measurement also waits for the
-     surfaces to finish painting, otherwise that work lands inside the window
-     and looks like a slow GPU. */
+     surfaces to be fully in — both the fetch and the frame-by-frame swap above
+     carry a shader compile and a texture upload, and letting that land inside
+     the window makes any machine look like a slow GPU. */
   let winMs = 0;
   let winFrames = 0;
   let tuned = false;
   const tune = (dt) => {
-    if (tuned || dpr <= 1 || !surfaces) return;
+    if (tuned || dpr <= 1 || !surfaces || uploads || compiling) return;
     winMs += dt;
     winFrames++;
     if (winMs < 1500) return;
@@ -923,7 +1335,6 @@ export function createSociety(host) {
      screen is 30, 60 or 144 Hz — it just draws more in-between frames. */
   const FOLLOW = 0.14; // per 60 Hz frame, kept from the original
   const SWAY = 0.0009375; // clock units per ms — the original's 0.03 per 32 ms
-  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* Every frame is drawn *while anything is moving*, and none are drawn once
      everything has come to rest.
@@ -949,7 +1360,9 @@ export function createSociety(host) {
     const dt = prev ? Math.min(now - prev, 64) : 16.667;
     prev = now;
 
-    const scrolling = scrollSmooth !== scrollY;
+    prepareSurfaces();
+
+    const scrolling = scroll.value !== scrollY;
     followScroll(dt);
     targets();
 
@@ -957,17 +1370,28 @@ export function createSociety(host) {
       // land on the right stop straight away — on a reload part-way down the
       // page there is nothing to fly in from
       snapped = true;
-      scrollSmooth = scrollY;
-      scrollVel = 0;
+      scroll.value = scrollY;
+      scroll.vel = 0;
       targets();
       camPos.copy(wantPos);
       camTgt.copy(wantTgt);
-      fov = wantFov;
+      zoom.value = fov = wantFov;
+      zoom.vel = 0;
+      side = wantSide;
     } else {
       const k = 1 - Math.pow(1 - FOLLOW, dt / 16.667);
       camPos.lerp(wantPos, k);
       camTgt.lerp(wantTgt, k);
-      fov += (wantFov - fov) * k;
+      side += (wantSide - side) * k;
+      /* The zoom gets the spring rather than the lerp the position uses.
+         Field of view is the one channel where an eased curve is legible as
+         itself: a few degrees of change spread across the whole frame, so any
+         kink in its velocity reads as the lens twitching. The lerp has exactly
+         that kink built in — it restarts from zero speed every time the target
+         moves, which at a section boundary is every frame. Slightly longer
+         than the position follow, so the zoom settles just after the move
+         lands instead of racing it. */
+      fov = stepSpring(zoom, wantFov, ZOOM_TIME, dt / 1000);
     }
 
     /* Rest detection. The grace period keeps frames flowing for a beat after
@@ -979,14 +1403,15 @@ export function createSociety(host) {
        nothing — but the exponential tail below them runs for seconds, which is
        seconds of pointless full-page repainting. */
     const posErr = camPos.distanceToSquared(wantPos) + camTgt.distanceToSquared(wantTgt);
-    const moving = scrolling || posErr > 2e-5 || Math.abs(wantFov - fov) > 0.004;
+    const moving =
+      scrolling || posErr > 2e-5 || Math.abs(wantFov - fov) > 0.004 || Math.abs(wantSide - side) > 0.002;
     restMs = moving || needs ? 0 : restMs + dt;
     if (dbg) {
       dbg.restMs = restMs;
       dbg.scrolling = scrolling;
       dbg.camErr = camPos.distanceToSquared(wantPos) + camTgt.distanceToSquared(wantTgt) + Math.abs(wantFov - fov);
       dbg.needs = needs;
-      dbg.gap = scrollY - scrollSmooth;
+      dbg.gap = scrollY - scroll.value;
     }
     if (restMs > IDLE_GRACE) return;
 
@@ -994,11 +1419,19 @@ export function createSociety(host) {
 
     camera.fov = fov;
     camera.updateProjectionMatrix();
-    camera.position.copy(camPos);
+    framedView(side);
+    camera.position.copy(_viewPos);
     camera.position.y += Math.sin(clock * 0.5) * 0.1;
     camera.position.x += Math.sin(clock * 0.31) * 0.07;
-    camera.lookAt(camTgt);
+    camera.lookAt(_viewTgt);
     camera.rotation.z += Math.sin(clock * 0.23) * 0.004;
+    if (compiling) {
+      // Programs are still building. Keep the camera tracking the scroll so it
+      // is already in the right place when drawing resumes, but stay off the
+      // GPU — rendering now is what would block on the link check.
+      needs = true;
+      return;
+    }
     renderer.render(scene, camera);
     tune(dt);
     needs = false;

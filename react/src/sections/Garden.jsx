@@ -2,7 +2,7 @@ import { amenityChips } from '../data.js';
 
 export default function Garden() {
   return (
-    <section data-cam="garden" className="cn-sec">
+    <section data-cam="garden" className="cn-sec cn-side cn-side--left" data-side="left">
       <div className="cn-grid cn-garden">
         <div className="cn-garden-copy cn-surface cn-surface--sage">
           <div data-reveal="1" className="cn-kicker cn-kicker--sage cn-mb16">

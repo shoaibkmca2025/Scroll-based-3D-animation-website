@@ -1,6 +1,6 @@
 export default function Hero() {
   return (
-    <section id="top" data-cam="wide" className="cn-hero">
+    <section id="top" data-cam="wide" className="cn-hero" data-side="left">
       <div className="cn-hero-copy">
         <div className="cn-badge">
           <span className="cn-badge-dot" />

@@ -2,7 +2,7 @@ import { gateNotes, gateSteps } from '../data.js';
 
 export default function Gate() {
   return (
-    <section id="gate" data-cam="gate" className="cn-sec">
+    <section id="gate" data-cam="gate" className="cn-sec cn-side cn-side--left" data-side="left">
       <div className="cn-gate-panel">
         <div data-reveal="1" className="cn-kicker cn-kicker--onink">
           The strongest part

@@ -2,7 +2,7 @@ import { onboarding } from '../data.js';
 
 export default function Onboarding() {
   return (
-    <section id="onboarding" data-cam="pool" className="cn-sec">
+    <section id="onboarding" data-cam="pool" className="cn-sec cn-side cn-side--right" data-side="right">
       <div className="cn-onboard-panel cn-surface cn-surface--sage">
         <div data-reveal="1" className="cn-kicker cn-kicker--sage">
           Done for you

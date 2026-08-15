@@ -1,9 +1,22 @@
 import * as THREE from 'three';
 
-/* Procedurally drawn PBR texture sets — albedo, normal and (where it matters)
-   roughness. Everything is painted on a 2D canvas and tiles seamlessly, so the
-   scene still ships zero image assets: nothing to download, nothing to cache,
-   and the maps scale with the device instead of being baked at one size. */
+/* PBR texture sets — albedo, normal and, where roughness actually varies, a
+   packed AO/roughness/metalness map.
+
+   Most surfaces are photographed: real scans of plaster, concrete, clay
+   pantiles, timber, dirt, asphalt, sand, leaf litter and mown grass, taken
+   from Poly Haven and ambientCG (both CC0) and re-encoded as WebP into
+   `public/textures/`. Photographs carry the one thing no amount of canvas
+   drawing reproduces — the irregularity of a real material — and that is what
+   separates a building from a coloured box.
+
+   Four surfaces are still painted here rather than photographed: brushed metal
+   and still water, which are almost pure normal-map detail; tyre tread, which
+   has to line up with the wheel; and car paint, which is deliberately near
+   white so each body colour can tint it. The painters for the photographed
+   surfaces are kept too, as the fallback when an image fails to load — a scene
+   with flat untextured walls is a much worse failure than a slightly synthetic
+   one. */
 
 const clamp = (v, a, c) => (v < a ? a : v > c ? c : v);
 
@@ -367,41 +380,126 @@ const painters = {
   }
 };
 
+// ── the photographed sets ─────────────────────────────────────────────
+
+/* Which scan backs each surface, and whether it ships a packed AO/roughness/
+   metalness map. `arm` is only fetched where roughness genuinely varies across
+   the surface — dirt, sand, grass and leaf litter are uniformly rough, and a
+   third image per set to say so is a third of the download for nothing.
+
+   Delivered resolution is baked into the files, not chosen here: 2048² for the
+   plaster and concrete the camera walks up to, 1024² for everything else, with
+   a half-size `low` tier alongside for phones. Detail comes from tiling these
+   at a few metres per repeat, not from one enormous map — an 8192² set across
+   these nine surfaces would be roughly 800 MB to download and ~10 GB of GPU
+   memory, which no browser will give you. */
+const SCANS = {
+  plaster: { arm: true },
+  concrete: { arm: true },
+  tiles: { arm: true },
+  wood: { arm: true },
+  earth: { arm: false },
+  asphalt: { arm: false },
+  sand: { arm: false },
+  leaf: { arm: false },
+  grass: { arm: false }
+};
+
+/* Decoded through createImageBitmap rather than an <img>.
+
+   A texture built from an HTMLImageElement does not decode when it loads — it
+   decodes when three first uploads it, on the main thread. With a whole set
+   arriving at once that is forty-odd megapixels unpacking inside one or two
+   frames: measured on an integrated Radeon, a 2.2 second stall the instant the
+   last response landed, and then a further 100–700 ms on each material as its
+   maps went up. createImageBitmap does that work on a worker thread and hands
+   back something the upload path can take almost directly.
+
+   The vertical flip has to be baked into the bitmap. three leaves `flipY` to
+   the GL unpack parameter, which browsers either ignore for an ImageBitmap or
+   honour by falling back to a CPU copy that gives back everything just gained.
+   Flipping at creation and clearing the flag is correct under either
+   behaviour, and keeps the fast path. */
+async function loadMap(url, colorSpace, aniso) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`texture failed: ${url} → ${res.status}`);
+  const bitmap = await createImageBitmap(await res.blob());
+  const tex = new THREE.Texture(bitmap);
+  tex.colorSpace = colorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = aniso;
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+/* Albedo is colour and lives in sRGB; the normal and ARM maps are measurements
+   packed into colour channels and must be read raw, or every value in them
+   comes back through a gamma curve that was never applied. */
+function loadScan(name, spec, tier, aniso) {
+  const base = `${import.meta.env.BASE_URL}textures/${tier}/${name}_`;
+  const wanted = [
+    ['map', loadMap(base + 'diff.webp', THREE.SRGBColorSpace, aniso)],
+    ['normalMap', loadMap(base + 'nor.webp', THREE.NoColorSpace, aniso)]
+  ];
+  if (spec.arm) wanted.push(['armMap', loadMap(base + 'arm.webp', THREE.NoColorSpace, aniso)]);
+  return Promise.all(wanted.map(([key, p]) => p.then((tex) => [key, tex]))).then(Object.fromEntries);
+}
+
 const yieldToPage = () => new Promise((r) => setTimeout(r, 0));
 
+/* Painter settings, used for the four surfaces that stay procedural and as the
+   fallback for any scan that fails to load. */
+const PAINT = {
+  plaster: { bump: 0.5, detail: 1 },
+  earth: { bump: 1.6, rough: [0.88, 1.0], detail: 1 },
+  concrete: { bump: 2.2, rough: [0.72, 0.98], detail: 1 },
+  tiles: { bump: 4.0, rough: [0.5, 0.85], detail: 1 },
+  carPaint: { bump: 0.35, detail: 0.5 },
+  asphalt: { bump: 2.6, rough: [0.78, 0.99], detail: 0.5 },
+  grass: { bump: 2.8, rough: [0.85, 1.0], detail: 0.5 },
+  sand: { bump: 2.0, rough: [0.9, 1.0], detail: 0.5 },
+  wood: { bump: 1.8, rough: [0.6, 0.92], detail: 0.5 },
+  tyre: { bump: 3.2, rough: [0.72, 0.95], detail: 0.5 },
+  metal: { bump: 0.8, rough: [0.2, 0.55], detail: 0.5 },
+  water: { bump: 1.1, detail: 0.5 },
+  leaf: { bump: 2.4, detail: 0.5 }
+};
+
+function paint(name, size, aniso) {
+  const { detail, ...rest } = PAINT[name];
+  return surface(painters[name], { size: Math.round(size * detail), aniso, ...rest });
+}
+
 /**
- * Builds every surface. Yields between them so a mid-scroll page never janks
- * while the maps are being painted.
+ * Builds every surface: the photographed sets are fetched in parallel, the
+ * four painted ones are drawn between yields so a mid-scroll page never janks.
  *
- * `size` is per-map resolution. 1024² across 8 surfaces is ~80 MB of GPU
- * memory; 4096² would be ~1.3 GB, which is why detail comes from tiling these
- * at a high repeat rather than from one enormous map.
+ * `tier` picks which encode of the scans to fetch — 'high' or 'low'. `size` is
+ * the canvas resolution for the painted surfaces only.
  */
-export async function buildSurfaces({ size = 1024, aniso = 8 } = {}) {
+export async function buildSurfaces({ tier = 'high', size = 1024, aniso = 8 } = {}) {
   const out = {};
-  // `detail` scales each surface's resolution. The walls, ground and roofs get
-  // the full map because the camera comes close to them; grass, sand and
-  // foliage are only ever seen at a distance or in small pieces, and halving
-  // those cuts total painting work and GPU memory by roughly half for no
-  // visible difference.
-  const opts = {
-    plaster: { bump: 0.5, detail: 1 },
-    earth: { bump: 1.6, rough: [0.88, 1.0], detail: 1 },
-    concrete: { bump: 2.2, rough: [0.72, 0.98], detail: 1 },
-    tiles: { bump: 4.0, rough: [0.5, 0.85], detail: 1 },
-    carPaint: { bump: 0.35, detail: 0.5 },
-    asphalt: { bump: 2.6, rough: [0.78, 0.99], detail: 0.5 },
-    grass: { bump: 2.8, rough: [0.85, 1.0], detail: 0.5 },
-    sand: { bump: 2.0, rough: [0.9, 1.0], detail: 0.5 },
-    wood: { bump: 1.8, rough: [0.6, 0.92], detail: 0.5 },
-    tyre: { bump: 3.2, rough: [0.72, 0.95], detail: 0.5 },
-    metal: { bump: 0.8, rough: [0.2, 0.55], detail: 0.5 },
-    water: { bump: 1.1, detail: 0.5 },
-    leaf: { bump: 2.4, detail: 0.5 }
-  };
-  for (const [name, draw] of Object.entries(painters)) {
-    const { detail, ...rest } = opts[name];
-    out[name] = surface(draw, { size: Math.round(size * detail), aniso, ...rest });
+
+  const fetched = await Promise.all(
+    Object.entries(SCANS).map(([name, spec]) =>
+      loadScan(name, spec, tier, aniso).then(
+        (set) => [name, set],
+        () => [name, null] // fall through to the painter below
+      )
+    )
+  );
+  const missed = [];
+  for (const [name, set] of fetched) {
+    if (set) out[name] = set;
+    else missed.push(name);
+  }
+  if (missed.length) console.warn('[society] falling back to painted surfaces:', missed.join(', '));
+
+  for (const name of ['metal', 'water', 'carPaint', 'tyre', ...missed]) {
+    out[name] = paint(name, size, aniso);
     await yieldToPage();
   }
   return out;
