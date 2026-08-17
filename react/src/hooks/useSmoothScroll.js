@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import Lenis from 'lenis';
+import { startScroller, stopScroller } from '../lib/scroller.js';
 
 /**
  * Smooth scrolling for the whole page.
@@ -21,7 +21,7 @@ export default function useSmoothScroll() {
     // scrolling, not a smoothed version of it.
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const lenis = new Lenis({
+    startScroller({
       /* Framerate-independent: `lerp` is applied per frame, so the same value
          settles faster on a 144 Hz screen than a 60 Hz one. `duration` with an
          easing is measured in seconds and behaves the same on both. */
@@ -45,10 +45,11 @@ export default function useSmoothScroll() {
         offset: 0,
         duration: 1.4,
         easing: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
-      },
-      autoRaf: true
+      }
+      // the frame loop is owned by scroller.js — see the note there on why the
+      // backdrop has to advance this before it reads it
     });
 
-    return () => lenis.destroy();
+    return () => stopScroller();
   }, []);
 }

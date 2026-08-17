@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { buildSurfaces, disposeSurfaces } from './textures.js';
+import { advanceScroll, scrollNow, scrollIsSmoothed } from '../lib/scroller.js';
 
 /* The society behind the page.
    The camera keeps the original society3d.js stops, easing curve, follow rate
@@ -1158,9 +1159,6 @@ export function createSociety(host) {
   const wantTgt = camTgt.clone();
   const a = new THREE.Vector3(), b = new THREE.Vector3();
   let fov = STOPS.wide.f, wantFov = fov;
-  // the zoom's own spring state — see the frame loop for why it is not a lerp
-  const zoom = { value: fov, vel: 0 };
-  const ZOOM_TIME = 0.28; // seconds for the field of view to settle
   let side = 1, wantSide = 1; // which way the subject leans; +1 = pushed right
   let needs = true;
 
@@ -1209,27 +1207,19 @@ export function createSociety(host) {
   addEventListener('resize', build);
   addEventListener('load', build);
 
-  /* The camera reads a smoothed copy of the scroll position rather than
-     scrollY itself, and the zoom below rides the same solver.
+  /* The fallback smoothing, for when the page is *not* easing its own
+     scrolling — reduced motion, or a scroller that failed to start. Then the
+     camera is fed raw wheel notches, ~100 px apart, and has to do the
+     smoothing itself.
 
-     This is a critically damped spring rather than a plain lerp on purpose. A
-     lerp snaps its velocity the instant the target moves, so a stepped input
-     comes out as a train of little surges — measurably so: frame-to-frame
-     camera speed varied by ~94% of its own mean. A spring carries velocity
-     across the steps and never overshoots.
+     A critically damped spring rather than a plain lerp, on purpose. A lerp
+     snaps its velocity the instant the target moves, so a stepped input comes
+     out as a train of little surges — measurably so: frame-to-frame camera
+     speed varied by ~94% of its own mean. A spring carries velocity across the
+     steps and never overshoots. */
+  const NATIVE_SMOOTH_TIME = 0.45;
 
-     How long it needs to be depends on what is feeding it. The page now eases
-     its own scrolling, so scrollY arrives as a continuous ramp and the camera
-     only has to track it — a long spring on top of that is not smoother, just
-     late, and the backdrop visibly trails the text. Where the page is scrolling
-     natively (reduced motion) the old 0.45 s is still what absorbs a wheel
-     notch's ~100 px jump. */
-  const SMOOTH_TIME = reduceMotion ? 0.45 : 0.14;
-
-  /* One step of the solver, on a `{ value, vel }` pair. Pulled out of the
-     scroll follower so the zoom can use exactly the same curve — the two are
-     driven by the same gesture and want the same character of movement, and
-     writing it twice is how they drift apart. */
+  /* One step of the solver, on a `{ value, vel }` pair. */
   const stepSpring = (s, target, smoothTime, h) => {
     const omega = 2 / smoothTime;
     const x = omega * h;
@@ -1241,10 +1231,26 @@ export function createSociety(host) {
     return s.value;
   };
 
-  const scroll = { value: scrollY, vel: 0 };
+  const scroll = { value: scrollNow(), vel: 0 };
   const followScroll = (dt) => {
-    const target = scrollY;
-    stepSpring(scroll, target, SMOOTH_TIME, dt / 1000);
+    const target = scrollNow();
+    /* When the page is easing its own scrolling there is nothing left for the
+       camera to smooth, so it takes that position exactly. This is the sync:
+       the text and the backdrop are then reading one number, on the same
+       frame, and cannot drift apart. A spring here would not be smoother — the
+       page is already smooth — it would only be lag, the society sliding along
+       behind the copy that is supposed to be pinned to it.
+
+       Without that easing (reduced motion, or if the scroller failed to start)
+       the raw wheel notch is back, and the spring is what turns a ~100 px jump
+       into a move. Asked per frame rather than once, because the backdrop
+       mounts before the scroller does. */
+    if (scrollIsSmoothed()) {
+      scroll.value = target;
+      scroll.vel = 0;
+      return;
+    }
+    stepSpring(scroll, target, NATIVE_SMOOTH_TIME, dt / 1000);
     // Snap at a quarter of a pixel. A spring has an exponential tail, so
     // insisting on 0.03px kept "still scrolling" true for seconds after the
     // wheel stopped and the loop could never reach rest.
@@ -1330,10 +1336,10 @@ export function createSociety(host) {
 
   /* Motion runs at the display's own refresh rate. The original capped itself
      to one frame every 32 ms, which is what made the moves and the zoom look
-     stepped; the smoothing below is exponential on elapsed time instead of
-     per-frame, so the camera travels at exactly the same speed whether the
-     screen is 30, 60 or 144 Hz — it just draws more in-between frames. */
-  const FOLLOW = 0.14; // per 60 Hz frame, kept from the original
+     stepped. Nothing here is measured per frame — the camera is a function of
+     scroll position and the sway a function of elapsed milliseconds — so it
+     travels at the same speed whether the screen is 30, 60 or 144 Hz, and
+     simply draws more in-between frames. */
   const SWAY = 0.0009375; // clock units per ms — the original's 0.03 per 32 ms
 
   /* Every frame is drawn *while anything is moving*, and none are drawn once
@@ -1349,7 +1355,7 @@ export function createSociety(host) {
      idles the whole page. */
   const dbg = location.search.includes('stats') ? {} : null;
   const IDLE_GRACE = 900; // keep drawing this long after the last movement
-  let clock = 0, prev = 0, raf = 0, alive = true, snapped = false, restMs = 0;
+  let clock = 0, prev = 0, raf = 0, alive = true, restMs = 0;
   function frame(now) {
     if (!alive) return;
     raf = requestAnimationFrame(frame);
@@ -1360,58 +1366,47 @@ export function createSociety(host) {
     const dt = prev ? Math.min(now - prev, 64) : 16.667;
     prev = now;
 
+    // Move the page's scroll on before reading it, so the camera and the copy
+    // are drawn from the same position on the same frame — see scroller.js.
+    advanceScroll(now);
+
     prepareSurfaces();
 
-    const scrolling = scroll.value !== scrollY;
+    const was = scroll.value;
     followScroll(dt);
     targets();
 
-    if (!snapped) {
-      // land on the right stop straight away — on a reload part-way down the
-      // page there is nothing to fly in from
-      snapped = true;
-      scroll.value = scrollY;
-      scroll.vel = 0;
-      targets();
-      camPos.copy(wantPos);
-      camTgt.copy(wantTgt);
-      zoom.value = fov = wantFov;
-      zoom.vel = 0;
-      side = wantSide;
-    } else {
-      const k = 1 - Math.pow(1 - FOLLOW, dt / 16.667);
-      camPos.lerp(wantPos, k);
-      camTgt.lerp(wantTgt, k);
-      side += (wantSide - side) * k;
-      /* The zoom gets the spring rather than the lerp the position uses.
-         Field of view is the one channel where an eased curve is legible as
-         itself: a few degrees of change spread across the whole frame, so any
-         kink in its velocity reads as the lens twitching. The lerp has exactly
-         that kink built in — it restarts from zero speed every time the target
-         moves, which at a section boundary is every frame. Slightly longer
-         than the position follow, so the zoom settles just after the move
-         lands instead of racing it. */
-      fov = stepSpring(zoom, wantFov, ZOOM_TIME, dt / 1000);
-    }
+    /* Eye, target, zoom and framing are written straight out, because all four
+       are already pure functions of one number — the scroll position — and a
+       smoothstep between stops that has zero slope at both ends, so none of
+       them can arrive with a kink in its velocity.
+
+       They used to each chase their own target at their own rate: a lerp on
+       the eye, a slower spring on the field of view. That guaranteed the zoom
+       finished after the move, which is exactly the thing that reads as the
+       backdrop not being nailed to the scroll. One input, one curve, four
+       outputs — they cannot come apart. */
+    camPos.copy(wantPos);
+    camTgt.copy(wantTgt);
+    fov = wantFov;
+    side = wantSide;
 
     /* Rest detection. The grace period keeps frames flowing for a beat after
        the camera arrives so the settle never clips, then the loop stops
-       drawing entirely until the next scroll, resize or texture swap. */
-    /* Thresholds are set at the point the eye stops being able to tell, not at
-       the point the float stops changing. 2e-5 squared world units is ~4 mm of
-       camera travel seen from 50 units away, and 0.004° of field of view is
-       nothing — but the exponential tail below them runs for seconds, which is
-       seconds of pointless full-page repainting. */
-    const posErr = camPos.distanceToSquared(wantPos) + camTgt.distanceToSquared(wantTgt);
-    const moving =
-      scrolling || posErr > 2e-5 || Math.abs(wantFov - fov) > 0.004 || Math.abs(wantSide - side) > 0.002;
+       drawing entirely until the next scroll, resize or texture swap.
+
+       The camera now sits exactly on its target every frame, so there is no
+       error left to threshold — the only question is whether the position it
+       is derived from moved. The second term covers the reduced-motion spring,
+       which is still closing a gap after the wheel itself has stopped. */
+    const moving = scroll.value !== was || scroll.value !== scrollNow();
     restMs = moving || needs ? 0 : restMs + dt;
     if (dbg) {
       dbg.restMs = restMs;
-      dbg.scrolling = scrolling;
-      dbg.camErr = camPos.distanceToSquared(wantPos) + camTgt.distanceToSquared(wantTgt) + Math.abs(wantFov - fov);
+      dbg.moving = moving;
+      dbg.scroll = Math.round(scroll.value * 100) / 100;
       dbg.needs = needs;
-      dbg.gap = scrollY - scroll.value;
+      dbg.gap = scrollNow() - scroll.value;
     }
     if (restMs > IDLE_GRACE) return;
 
