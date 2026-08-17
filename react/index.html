@@ -15,10 +15,28 @@
          it, which is what made those headings look soft.
          Fraunces carries its SOFT and WONK axes so the display face keeps its
          character — those axes only exist in the file if they are requested. -->
+    <!-- Fetched at stylesheet priority but not allowed to hold up the first
+         paint. A plain <link rel="stylesheet"> here is render-blocking, and it
+         is blocking on a third party: nothing at all could be drawn until a
+         DNS lookup, a TLS handshake and a round trip to Google had finished.
+         Measured, that was ~510ms of blank page.
+
+         Switching rel to stylesheet on load applies it the moment it lands.
+         Until then the fallbacks in tokens.css do the work — Iowan Old Style
+         or Georgia for the display face, system-ui for the body — which is
+         also what `display=swap` already assumed would happen. -->
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Fraunces:SOFT,WONK,opsz,wght@40,1,9..144,400..900&family=Figtree:wght@400..900&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:SOFT,WONK,opsz,wght@40,1,9..144,400..900&family=Figtree:wght@400..900&display=swap"
+      />
+    </noscript>
   </head>
   <body>
     <div id="root"></div>
