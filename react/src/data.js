@@ -98,6 +98,20 @@ export const audiences = [
     ],
     img: 'screens/13-parking.png',
     alt: 'Parking hub screen'
+  },
+  {
+    variant: 'stf',
+    kicker: 'Household staff',
+    kickerTone: 'accent',
+    title: 'Maids, cooks and drivers',
+    items: [
+      'A monthly pass instead of a signature at every visit',
+      'Registered by the household, approved by the secretary',
+      'One scan at the gate records entry, exit and attendance',
+      'Nothing for them to install, and no app to learn'
+    ],
+    img: 'screens/15-staff-approvals.png',
+    alt: 'Staff approvals screen'
   }
 ];
 

@@ -5,10 +5,11 @@ export default function Audiences() {
     <section data-cam="towers" className="cn-sec cn-side cn-side--right" data-side="right">
       <div className="cn-aud-wrap">
         <div className="cn-aud-intro cn-surface cn-surface--md cn-surface--cream">
-          <h2 data-reveal="1">Three products, one backend.</h2>
+          <h2 data-reveal="1">Four people, one backend.</h2>
           <p data-reveal="1">
             Residents and guards share an app and see different screens. The committee gets its
-            authority inside the same app.
+            authority inside the same app. Household staff carry a monthly pass instead — the
+            same scan that lets them in marks their attendance.
           </p>
         </div>
 

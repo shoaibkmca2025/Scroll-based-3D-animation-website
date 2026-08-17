@@ -369,10 +369,14 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
 .cn-aud-grid { grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 22px; }
 
-/* These three sit directly over the busiest part of the 3D scene — tiled
+/* These four sit directly over the busiest part of the 3D scene — tiled
    roofs, tree canopies and a dark tower — so they carry more fill than the
    other panels and frost what is behind them. Below ~85% the backdrop's
-   edges read straight through the body copy. */
+   edges read straight through the body copy.
+
+   Four is also what the grid wants. The side column caps this wrap at 660px,
+   which fits two 290px tracks and not three, so the set reads as 2×2 — with
+   three cards the last one sat alone on its own row. */
 .cn-aud {
   border-radius: var(--radius-lg);
   padding: 34px 30px 0;
@@ -396,6 +400,13 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: var(--shadow-lg);
 }
+/* Warm clay, so the second row reads dark/light the way the first reads
+   light/sage rather than repeating either. */
+.cn-aud--stf {
+  background: color-mix(in srgb, #fae3d3 96%, transparent);
+  border: 1px solid color-mix(in srgb, #ffffff 62%, transparent);
+  box-shadow: var(--shadow-lg);
+}
 .cn-aud h3 { font-size: 28px; margin: 0 0 16px; }
 .cn-aud--sec h3 { color: #fff; }
 .cn-aud ul {
@@ -411,6 +422,7 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .cn-aud--res ul { color: var(--color-neutral-900); }
 .cn-aud--com ul { color: var(--color-accent-2-900); }
 .cn-aud--sec ul { color: var(--color-neutral-300); }
+.cn-aud--stf ul { color: var(--color-accent-900); }
 
 .cn-aud-shot { margin-top: auto; height: 200px; overflow: hidden; display: flex; justify-content: center; }
 .cn-aud-shot img {
