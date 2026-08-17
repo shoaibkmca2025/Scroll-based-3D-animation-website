@@ -1018,7 +1018,16 @@ function buildWorld(M) {
 
 export function createSociety(host) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-  let dpr = Math.min(devicePixelRatio || 1, 2);
+
+  /* Phones report a device ratio of 3 and get a lower ceiling than a desktop.
+     Every one of these pixels is shaded with the full material — albedo,
+     normal, packed AO/roughness, an environment probe and a shadow lookup —
+     and a phone is doing that on a tile GPU inside a thermal budget. At 1.5 a
+     360pt screen renders 0.65MP instead of 1.15MP for detail nobody can
+     resolve at arm's length, and the sun stops coming out of the battery.
+     `tune` can still step it down again from here if the frames say so. */
+  const phone = Math.min(innerWidth, innerHeight) < 700;
+  let dpr = Math.min(devicePixelRatio || 1, phone ? 1.5 : 2);
   renderer.setPixelRatio(dpr);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
