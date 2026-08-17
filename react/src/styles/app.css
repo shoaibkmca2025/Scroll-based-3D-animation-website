@@ -173,6 +173,20 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
      visible above and below it. */
   .cn-screens[data-side] > .cn-rail { max-width: none; }
 
+  /* The demo form is the other exception, and for the opposite reason to the
+     rail: it is already a two-column panel, but halved into the side it gets
+     528px of content against the 648px those columns need, so it silently
+     collapses to one. Heading, copy and four fields end up stacked in a panel
+     790px tall — taller than the viewport on a 1366x768 or 1280x720 laptop,
+     which is why the form ran off the bottom of the page.
+
+     Given the width its own layout asks for it lands at ~450px and the whole
+     section sits in one screen. 840px is the narrowest that still leaves both
+     columns readable, which keeps as much of the society in frame as possible
+     for the closing shot. */
+  .cn-cta[data-side] > * { max-width: min(840px, 92vw); }
+  .cn-cta[data-side] .cn-cta-panel { grid-template-columns: 1.05fr 1fr; gap: 44px; }
+
   /* A section whose own layout is two columns would be halved twice and end
      up with 300px of text. These collapse to one column inside the side. */
   .cn-side[data-side] .cn-garden { grid-template-columns: 1fr; }
@@ -650,7 +664,10 @@ a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 }
 
 /* ── cta ──────────────────────────────────────────────────────────── */
-.cn-cta { padding: clamp(60px, 9vw, 120px) clamp(24px, 7vw, 110px) clamp(50px, 6vw, 80px); }
+/* Shallower top padding than the other sections: this one has to clear the
+   sticky nav and still fit its panel between it and the footer on a short
+   laptop, and 9vw was spending 120px of that budget on air. */
+.cn-cta { padding: clamp(56px, 6vw, 96px) clamp(24px, 7vw, 110px) clamp(50px, 6vw, 80px); }
 .cn-cta-panel {
   max-width: 1080px;
   margin: 0 auto;
