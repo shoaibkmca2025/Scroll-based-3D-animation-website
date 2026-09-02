@@ -166,7 +166,12 @@ export default function ScrollExpandHero({
               transition={{ duration: 0.2 }}
             />
             {/* Whatever is layered inside the panel — the live mock-ups. */}
-            <div className="se-panel-inner">{panelContent}</div>
+            <div
+              className="se-panel-inner"
+              style={{ opacity: Math.max(0, (progress - 0.45) / 0.4) }}
+            >
+              {panelContent}
+            </div>
           </div>
 
           {/* The two halves of the title part as the panel opens between

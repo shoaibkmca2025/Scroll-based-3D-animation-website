@@ -17,7 +17,6 @@ export default function Hero() {
         title="Everything your society runs on"
         date="For Indian housing societies"
         scrollToExpand="Scroll to expand"
-        textBlend
         panelContent={
           <>
             <div className="cn-mock cn-mock--pass">
@@ -62,6 +61,34 @@ export default function Hero() {
             <a href="#gate" className="cn-btn cn-btn--ghost">
               See how the gate works
             </a>
+          </div>
+
+          {/* The block the expansion reveals. Without this the panel opened
+              onto a line of copy and two buttons, which is most of a screen of
+              nothing — the "blank" the page was complaining about. */}
+          <div className="se-after">
+            <figure className="se-after-media">
+              <img src="hero-after.webp" alt="A residential society" width="1100" height="700" loading="lazy" />
+            </figure>
+            <div className="se-after-copy">
+              <div className="cn-kicker cn-kicker--onink cn-mb12">One backend</div>
+              <h2>Every part of the society, on the same records.</h2>
+              <ul className="se-after-list">
+                <li>
+                  <strong>The gate</strong>
+                  Passes are scanned, not written down. Entry, exit and staff attendance all fall out
+                  of the same scan.
+                </li>
+                <li>
+                  <strong>The books</strong>
+                  Dues, receipts and expenses against a balance every resident can see.
+                </li>
+                <li>
+                  <strong>The noticeboard</strong>
+                  Notices, events and complaints with a status, instead of a group chat.
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </ScrollExpandHero>
