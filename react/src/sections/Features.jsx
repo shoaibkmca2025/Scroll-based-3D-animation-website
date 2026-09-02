@@ -8,7 +8,7 @@ export default function Features() {
         <div className="cn-grid cn-features-grid">
           {features.map((f) => (
             <div key={f.title} data-reveal="1" className="cn-feature">
-              <div className="cn-feature-tag">{f.tag}</div>
+              <div className="cn-feature-tag" data-tag={f.tag}>{f.tag}</div>
               <h3>{f.title}</h3>
               <p>{f.body}</p>
             </div>

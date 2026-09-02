@@ -634,7 +634,7 @@
    Gated on flags useMotion sets only while it is driving. Without them these
    are ordinary flow, which is what reduced motion and a blocked script get —
    the other way round leaves a 300vh empty track and dimmed cards. */
-.cn-pin[data-pin-live] .cn-pin-track { height: 300vh; }
+.cn-pin[data-pin-live] .cn-pin-track { height: 200vh; }
 .cn-pin[data-pin-live] .cn-pin-stage { position: sticky; top: 0; min-height: 100vh; display: flex; align-items: center; }
 .cn-pin[data-pin-live] .cn-pin-stage > * { width: 100%; }
 .cn-pin[data-pin-live] .cn-gate-step { opacity: 0.34; transform: translateY(10px); }
@@ -827,3 +827,52 @@
    what actually pins the page: the alternative — preventDefault plus a
    scrollTo(0,0) — races the smooth-scroll layer's own rAF write and loses. */
 .se-lock, .se-lock body { overflow: hidden; height: 100%; }
+
+/* ── colour ───────────────────────────────────────────────────────────
+   The light sections were carrying almost no colour, which is what made the
+   page read as white with red buttons on it. These put the palette back into
+   the surfaces themselves rather than adding more accents on top. */
+
+/* Feature tags take a colour per category, so sixteen cards read as five
+   groups at a glance instead of one long list. */
+.cn-feature-tag[data-tag='Gate'] { color: var(--brand); background: var(--brand-tint); }
+.cn-feature-tag[data-tag='Safety'] { color: #9a3412; background: #fdece2; }
+.cn-feature-tag[data-tag='Money'] { color: #3f6212; background: #f0f7e2; }
+.cn-feature-tag[data-tag='Community'] { color: #6d3411; background: #fbeee6; }
+.cn-feature-tag[data-tag='Admin'] { color: #57534e; background: #f3f0ee; }
+
+/* A hairline of brand across the top of each numbered card, drawn in on
+   reveal. Cheap, and it stops a white card being only a white card. */
+.cn-problem-card,
+.cn-onboard-card { position: relative; overflow: hidden; }
+.cn-problem-card::before,
+.cn-onboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand), var(--brand-pale));
+  transform-origin: left;
+  animation: wipeX 0.9s ease both;
+}
+[data-ground='brand'] .cn-onboard-card::before { background: linear-gradient(90deg, #fff, rgba(255,255,255,0.25)); }
+
+/* The everyday-life cards sit on the warm band; giving them a tinted face and
+   a brand rule down the side keeps that section from going flat. */
+[data-ground='warm'] .cn-play-grid > div { border-left: 3px solid var(--brand-wash); }
+[data-ground='warm'] .cn-play-grid > div:hover { border-left-color: var(--brand); }
+
+/* The audience cards alternate ground so the four read as four. */
+.cn-aud--res { background: var(--paper-warm); }
+
+/* A short standfirst under the headings that had none. */
+.cn-sub {
+  font-size: clamp(15.5px, 1.2vw, 17px);
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 54ch;
+  margin: 0 0 clamp(24px, 3vw, 40px);
+}
+[data-ground='dark'] .cn-sub { color: var(--on-dark-2); }

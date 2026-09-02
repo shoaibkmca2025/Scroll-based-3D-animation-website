@@ -9,6 +9,10 @@ export default function Screens() {
       <div className="cn-screens-head">
         <div data-reveal="1" className="cn-kicker cn-kicker--onink cn-mb12">Inside the app</div>
         <h2 data-reveal="1">The screens your society will live in.</h2>
+        <p data-reveal="1" className="cn-sub">
+          One app for residents and guards, with the committee's controls inside it. Swipe through
+          the screens your members will actually open — the hub, the books, the directory.
+        </p>
       </div>
       <div data-rail="1" className="cn-rail">
         {railScreens.map((s) => (
