@@ -21,6 +21,7 @@ import Lenis from 'lenis';
 
 let lenis = null;
 let raf = 0;
+let paused = false;
 
 export function startScroller(options) {
   /* `autoRaf` is deliberately off. Lenis's `raf()` re-registers itself from
@@ -30,7 +31,12 @@ export function startScroller(options) {
   lenis = new Lenis({ ...options, autoRaf: false });
   const tick = (t) => {
     raf = requestAnimationFrame(tick);
-    lenis.raf(t);
+    /* While paused the loop keeps running but does not advance Lenis. This is
+       the part that matters: `stop()` alone still leaves this rAF writing a
+       scroll position every frame, and `overflow: hidden` does not stop a
+       programmatic scroll — only a user one. Anything trying to pin the page
+       loses that race unless the write itself stops. */
+    if (!paused) lenis.raf(t);
   };
   raf = requestAnimationFrame(tick);
   return lenis;
@@ -59,4 +65,19 @@ export function scrollNow() {
     no smoothing of its own left to do. */
 export function scrollIsSmoothed() {
   return lenis !== null;
+}
+
+/* The expanding hero takes the wheel for itself while it is opening: it calls
+   preventDefault on every notch and pins the window at 0. Lenis listens to the
+   same event, so leaving both running means two things fighting over one
+   gesture — the page jitters and the expansion stutters. Stopping Lenis for
+   the duration hands the wheel to whoever is actually using it. */
+export function pauseScroller() {
+  paused = true;
+  if (lenis) lenis.stop();
+}
+
+export function resumeScroller() {
+  paused = false;
+  if (lenis) lenis.start();
 }

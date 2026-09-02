@@ -1,43 +1,25 @@
-/* The opening: a tall track with a stuck stage, so the headline and the
-   mock-ups hold on screen while the page scrolls under them.
+import ScrollExpandHero from '../components/ScrollExpandHero.jsx';
 
-   The mock-ups are the point. Rather than a screenshot of the gate, this is
-   the gate working — a pass being scanned, an entry landing in the log, a
-   staff attendance row filled in. Each runs on its own clock so they never
-   line up into a single pulse. */
+/* The opening. The panel expands from a card to nearly the full screen as you
+   turn the wheel, the headline parts around it, and the copy and actions fade
+   in once it is open.
+
+   What sits inside the panel is the gate working rather than a picture of it:
+   a pass with a line scanning down it, and the attendance row that same scan
+   produces. Those were already built for the previous hero, so the expansion
+   reveals something real instead of a gradient. */
 export default function Hero() {
   return (
-    <section id="top" className="cn-hero">
-      <span className="cn-orb cn-orb--a" aria-hidden="true" />
-      <span className="cn-orb cn-orb--b" aria-hidden="true" />
-
-      <div className="cn-hero-track">
-        <div className="cn-hero-stage">
-          <div className="cn-hero-copy">
-            <div className="cn-badge">
-              <span className="cn-badge-dot" />
-              For Indian housing societies
-            </div>
-            <h1>
-              <span>Everything your</span>
-              <span>society runs on,</span>
-              <span>in one place.</span>
-            </h1>
-            <p>
-              The gate, the books and the noticeboard — replacing the WhatsApp groups, paper visitor
-              registers and phone-call reminders your committee runs on today.
-            </p>
-            <div className="cn-hero-actions">
-              <a href="#demo" className="cn-btn cn-btn--primary">
-                Get your society onboarded
-              </a>
-              <a href="#gate" className="cn-btn cn-btn--ghost">
-                See how the gate works
-              </a>
-            </div>
-          </div>
-
-          <div className="cn-hero-media" aria-hidden="true">
+    <section id="top">
+      <ScrollExpandHero
+        bgImageSrc="hero-bg.webp"
+        mediaSrc="hero-media.webp"
+        title="Everything your society runs on"
+        date="For Indian housing societies"
+        scrollToExpand="Scroll to expand"
+        textBlend
+        panelContent={
+          <>
             <div className="cn-mock cn-mock--pass">
               <div className="cn-mock-head">
                 <span>Visitor pass</span>
@@ -65,11 +47,24 @@ export default function Hero() {
                 <span className="cn-mock-time">IN 09:04 · OUT 13:20</span>
               </div>
             </div>
+          </>
+        }
+      >
+        <div className="se-copy">
+          <p className="se-lede">
+            The gate, the books and the noticeboard — replacing the WhatsApp groups, paper visitor
+            registers and phone-call reminders your committee runs on today.
+          </p>
+          <div className="se-actions">
+            <a href="#demo" className="cn-btn cn-btn--primary">
+              Get your society onboarded
+            </a>
+            <a href="#gate" className="cn-btn cn-btn--ghost">
+              See how the gate works
+            </a>
           </div>
-
-          <div className="cn-scroll-hint">Scroll to expand</div>
         </div>
-      </div>
+      </ScrollExpandHero>
     </section>
   );
 }
