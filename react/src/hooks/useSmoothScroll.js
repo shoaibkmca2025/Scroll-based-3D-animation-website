@@ -42,7 +42,9 @@ export default function useSmoothScroll() {
          accelerates out of rest and settles into the target, which is what a
          jump between sections should feel like. */
       anchors: {
-        offset: 0,
+        /* Stop short of the target by the height of the sticky nav, otherwise
+           every anchor lands its heading underneath the bar. */
+        offset: -76,
         duration: 1.4,
         easing: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
       }

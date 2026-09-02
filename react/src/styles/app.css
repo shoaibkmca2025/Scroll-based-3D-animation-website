@@ -968,3 +968,71 @@
    empty viewport of bare track behind it, which is where the page looked
    blank. `clip` does the same clipping without becoming a scroll container. */
 .cn-pin { overflow: clip; }
+
+/* ── the two hero cards ───────────────────────────────────────────────
+   The card inherited near-black body text, which on a dark card meant the
+   staff names were invisible — that is why the attendance row looked empty.
+   Colour is set explicitly here rather than relied on from a parent. */
+.se-panel-inner .cn-mock { color: #fff; }
+.se-panel-inner .cn-mock-head { color: rgba(255, 255, 255, 0.5); }
+
+/* The code itself. A block of noise only reads as a QR because of the three
+   finder squares, so those carry the weight and the rest is quiet. */
+.cn-mock-qr {
+  background: #fff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  height: auto;
+  aspect-ratio: 1;
+  max-height: 128px;
+  margin-inline: auto;
+  width: 128px;
+}
+.cn-qr { width: 100%; height: 100%; color: #17110f; shape-rendering: crispEdges; }
+
+.cn-pass-who { margin-top: 12px; display: flex; flex-direction: column; gap: 2px; }
+.cn-pass-name { font-size: 15px; font-weight: 700; letter-spacing: -0.015em; color: #fff; }
+.cn-pass-note { font-size: 12.5px; color: rgba(255, 255, 255, 0.5); }
+.cn-pass-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--brand-pale);
+}
+.cn-pass-meta span {
+  border: 1px solid rgba(240, 169, 142, 0.34);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+/* Attendance reads as a register: a name, its state, and the times under it. */
+.se-panel-inner .cn-mock-row { padding: 9px 0 3px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.se-panel-inner .cn-mock-row:first-of-type { border-top: 0; }
+.se-panel-inner .cn-mock-name { color: #fff; font-size: 14px; }
+.se-panel-inner .cn-mock-time {
+  display: block;
+  padding-bottom: 7px;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.42);
+}
+.cn-mock-tag--wait { color: var(--muted-3); border-color: rgba(180, 168, 162, 0.4); }
+.cn-mock-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+}
+/* The gate dot pulses; this one is a steady state, not an event. */
+.cn-live--calm { background: var(--brand-pale); }
+.cn-live--calm::after { display: none; }

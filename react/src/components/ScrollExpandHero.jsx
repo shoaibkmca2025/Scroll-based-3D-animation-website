@@ -34,9 +34,25 @@ export default function ScrollExpandHero({
   panelContent,
   children
 }) {
-  const [progress, setProgress] = useState(0);
-  const [showContent, setShowContent] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  /* Three cases where the expansion must not run at all, decided once before
+     first paint rather than corrected afterwards:
+
+       reduced motion  someone who asked for less movement should not have to
+                       drive an animation to reach the page
+       a hash in the   a deep link means they want that section, not the hero
+       URL             — locking here throws them back to the top
+       already         a reload part-way down restores a scroll position, and
+       scrolled        locking would discard it
+
+     In all three the panel starts open, the document is never locked, and the
+     page behaves like an ordinary one. */
+  const skip =
+    typeof window !== 'undefined' &&
+    (matchMedia('(prefers-reduced-motion: reduce)').matches || !!location.hash || window.scrollY > 0);
+
+  const [progress, setProgress] = useState(skip ? 1 : 0);
+  const [showContent, setShowContent] = useState(skip);
+  const [expanded, setExpanded] = useState(skip);
   const [isPhone, setIsPhone] = useState(false);
   const touchStartY = useRef(0);
   const sectionRef = useRef(null);

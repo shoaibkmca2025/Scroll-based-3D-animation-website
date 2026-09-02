@@ -1,4 +1,5 @@
 import ScrollExpandHero from '../components/ScrollExpandHero.jsx';
+import PassQr from '../components/PassQr.jsx';
 
 /* The opening. The panel expands from a card to nearly the full screen as you
    turn the wheel, the headline parts around it, and the copy and actions fade
@@ -19,13 +20,25 @@ export default function Hero() {
         scrollToExpand="Scroll to expand"
         panelContent={
           <>
+            {/* The pass a resident issues, and the log line the guard's scan
+                produces. Between them they are the whole product in two
+                cards: something granted, and the record it leaves. */}
             <div className="cn-mock cn-mock--pass">
               <div className="cn-mock-head">
                 <span>Visitor pass</span>
                 <span className="cn-mock-flat">B-1204</span>
               </div>
               <div className="cn-mock-qr">
+                <PassQr />
                 <div className="cn-mock-scan" />
+              </div>
+              <div className="cn-pass-who">
+                <span className="cn-pass-name">Ravi Kulkarni</span>
+                <span className="cn-pass-note">Guest of Meera · A-101</span>
+              </div>
+              <div className="cn-pass-meta">
+                <span>VALID TILL 21:00</span>
+                <span>ONE ENTRY</span>
               </div>
               <div className="cn-mock-status">
                 <span className="cn-live" />
@@ -42,8 +55,19 @@ export default function Hero() {
                 <span className="cn-mock-name">Sunita · cook</span>
                 <span className="cn-mock-tag">PRESENT</span>
               </div>
+              <div className="cn-mock-time">IN 09:04 · OUT 13:20</div>
               <div className="cn-mock-row">
-                <span className="cn-mock-time">IN 09:04 · OUT 13:20</span>
+                <span className="cn-mock-name">Ramesh · driver</span>
+                <span className="cn-mock-tag">PRESENT</span>
+              </div>
+              <div className="cn-mock-time">IN 07:40 · ON DUTY</div>
+              <div className="cn-mock-row">
+                <span className="cn-mock-name">Anita · help</span>
+                <span className="cn-mock-tag cn-mock-tag--wait">AWAITED</span>
+              </div>
+              <div className="cn-mock-foot">
+                <span className="cn-live cn-live--calm" />
+                2 of 3 marked in by the gate
               </div>
             </div>
           </>
