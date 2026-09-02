@@ -1,13 +1,12 @@
 import { amenityChips } from '../data.js';
+import Shot from '../components/Shot.jsx';
 
 export default function Garden() {
   return (
-    <section data-cam="garden" className="cn-sec cn-side cn-side--left" data-side="left">
+    <section data-ground="paper-warm" className="cn-sec">
       <div className="cn-grid cn-garden">
-        <div className="cn-garden-copy cn-surface cn-surface--sage">
-          <div data-reveal="1" className="cn-kicker cn-kicker--sage cn-mb16">
-            Shared spaces
-          </div>
+        <div className="cn-garden-copy">
+          <div data-reveal="1" className="cn-kicker cn-kicker--sage cn-mb16">Shared spaces</div>
           <h2 data-reveal="1">The clubhouse, the garden, the gym — booked, not argued over.</h2>
           <p data-reveal="1">
             Amenity booking with conflict detection, and approval where the committee wants it.
@@ -19,9 +18,9 @@ export default function Garden() {
             ))}
           </ul>
         </div>
-        <div data-reveal="1" className="cn-garden-shots">
-          <img src="screens/11-amenities.png" alt="Amenities" width="1170" height="2532" loading="lazy" />
-          <img src="screens/09-events.png" alt="Events" width="1170" height="2532" loading="lazy" />
+        <div data-reveal="1" className="cn-garden-shots" data-parallax="0.07">
+          <Shot img="shots/home" alt="Notices and society tools" sizes="(max-width: 720px) 34vw, 176px" />
+          <Shot img="shots/finance" alt="Payment history" sizes="(max-width: 720px) 34vw, 176px" />
         </div>
       </div>
     </section>

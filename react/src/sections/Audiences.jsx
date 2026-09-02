@@ -1,8 +1,9 @@
+import Shot from '../components/Shot.jsx';
 import { audiences } from '../data.js';
 
 export default function Audiences() {
   return (
-    <section data-cam="towers" className="cn-sec cn-side cn-side--right" data-side="right">
+    <section data-ground="paper" className="cn-sec">
       <div className="cn-aud-wrap">
         <div className="cn-aud-intro cn-surface cn-surface--md cn-surface--cream">
           <h2 data-reveal="1">Four people, one backend.</h2>
@@ -24,7 +25,7 @@ export default function Audiences() {
                 ))}
               </ul>
               <div className="cn-aud-shot">
-                <img src={a.img} alt={a.alt} width="1170" height="2532" loading="lazy" />
+                <Shot img={a.img} alt={a.alt} sizes="(max-width: 720px) 54vw, 170px" />
               </div>
             </div>
           ))}

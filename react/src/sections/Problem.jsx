@@ -2,7 +2,7 @@ import { problems } from '../data.js';
 
 export default function Problem() {
   return (
-    <section data-cam="notice" className="cn-sec cn-side cn-side--right" data-side="right">
+    <section data-ground="warm-paper" className="cn-sec">
       <div className="cn-problem-panel cn-surface cn-surface--cream">
         <div data-reveal="1" className="cn-kicker cn-kicker--neutral cn-mb20">
           What it replaces

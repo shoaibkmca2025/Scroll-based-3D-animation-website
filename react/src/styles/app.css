@@ -1,929 +1,701 @@
-/* Grihive page styles — a 1:1 port of the inline styles the original
-   document carried, collapsed into reusable classes. */
+/* Grihive — built from the site design.
 
-/* ── document ─────────────────────────────────────────────────────── */
-/* No `scroll-behavior: smooth` here. The smooth scrolling is driven from
-   JavaScript so the 3D camera can read the same eased position the page is
-   using; leaving the CSS property on as well means the browser runs its own
-   competing animation whenever anything calls scrollTo, and the two fight over
-   in-page anchor jumps. Where the JS layer is off — reduced motion — the
-   browser's instant jump is the correct behaviour anyway. */
+   The page alternates ground all the way down: near-black, warm off-white,
+   white, and one brand-red band near the end. Each section declares which it
+   is with `data-ground`, so the rhythm is legible in the markup instead of
+   being an accident of source order.
 
-body {
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  overflow-x: hidden;
-}
+   Motion is the other half of it. Everything here is either a keyframe on its
+   own clock (drifting fields, the scanning pass, a pulsing ring) or a
+   scroll-triggered reveal driven from useMotion. The ambient loops are
+   deliberately slow — 16 to 30 seconds — because at that speed they read as
+   the page being alive rather than as something demanding to be watched. */
 
-a { color: var(--color-accent-700); text-decoration: none; }
-::selection { background: var(--color-accent-200); }
-summary { list-style: none; }
-summary::-webkit-details-marker { display: none; }
-input:focus-visible,
-button:focus-visible,
-a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+/* ── motion vocabulary ────────────────────────────────────────────── */
+@keyframes rise { from { opacity: 0; transform: translateY(34px); } to { opacity: 1; transform: none; } }
+@keyframes riseSm { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wipeX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes floatUp { from { transform: translateY(40px); } to { transform: translateY(-40px); } }
+@keyframes floatDown { from { transform: translateY(-28px); } to { transform: translateY(28px); } }
+@keyframes drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(4%, -5%) scale(1.08); } }
+@keyframes scan { 0% { top: 8%; opacity: 0; } 14% { opacity: 1; } 86% { opacity: 1; } 100% { top: 90%; opacity: 0; } }
+@keyframes pulseRing { 0% { transform: scale(0.7); opacity: 0.65; } 100% { transform: scale(2); opacity: 0; } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes bobY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+@keyframes sheen { 0% { transform: translateX(-130%) skewX(-18deg); } 55%, 100% { transform: translateX(260%) skewX(-18deg); } }
+@keyframes warp { 0% { transform: rotate(0deg) scale(1.3); } 50% { transform: rotate(180deg) scale(1.7); } 100% { transform: rotate(360deg) scale(1.3); } }
 
-@keyframes cn-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.85; }
-}
+/* ── shell ───────────────────────────────────────────────────────── */
+.cn-page { position: relative; width: 100%; overflow-x: hidden; }
 
-/* ── page shell + the 3D backdrop that stays behind everything ────── */
-.cn-page { position: relative; width: 100%; background: transparent; }
-
-.cn-stage {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  margin-bottom: -100vh;
-  z-index: 0;
-  pointer-events: none;
+.cn-sec,
+.cn-screens,
+.cn-faq,
+.cn-cta {
+  position: relative;
+  padding: var(--band) var(--gutter);
   overflow: hidden;
 }
+.cn-sec > *,
+.cn-faq > *,
+.cn-cta > * { max-width: var(--page); margin-inline: auto; position: relative; z-index: 2; }
+.cn-grid { display: grid; }
 
-.cn-scene { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
-
-.cn-scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  background: linear-gradient(
-    100deg,
-    color-mix(in srgb, #f5ead8 82%, transparent) 0%,
-    color-mix(in srgb, #f5ead8 48%, transparent) 34%,
-    transparent 62%
-  );
+/* ── grounds ──────────────────────────────────────────────────────── */
+[data-ground='dark'] { background: var(--ink); color: #fff; }
+[data-ground='warm'] { background: var(--paper-warm); }
+[data-ground='paper'] { background: var(--paper); }
+[data-ground='warm-paper'] { background: linear-gradient(180deg, var(--paper-warm), var(--paper)); }
+[data-ground='paper-warm'] {
+  background: linear-gradient(180deg, var(--paper), var(--paper-warm));
+  border-top: 1px solid var(--rule-brand);
+  border-bottom: 1px solid var(--rule-brand);
 }
+[data-ground='brand'] { background: linear-gradient(160deg, var(--brand), var(--brand-deep)); color: #fff; }
+[data-ground='dark'] h2,
+[data-ground='brand'] h2 { color: #fff; }
+
+/* Slow colour fields behind the dark and brand sections: two blurred blobs on
+   different clocks, so they never quite repeat against each other. */
+.cn-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+.cn-orb--a { width: 46vw; height: 46vw; left: -12vw; top: -10vw; background: var(--brand); animation: drift 24s ease-in-out infinite; }
+.cn-orb--b { width: 38vw; height: 38vw; right: -10vw; bottom: -14vw; background: var(--brand-bright); animation: drift 30s ease-in-out infinite reverse; }
+
+/* ── type ─────────────────────────────────────────────────────────── */
+.cn-sec h2,
+.cn-faq h2,
+.cn-cta h2 {
+  font-size: clamp(30px, 4.4vw, 56px);
+  line-height: 1.04;
+  letter-spacing: -0.032em;
+  margin: 0 0 20px;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+.cn-lede,
+.cn-gate-lede,
+.cn-roles-lede,
+.cn-onboard-lede {
+  font-size: clamp(16px, 1.3vw, 18.5px);
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 56ch;
+  margin: 0 0 clamp(30px, 4vw, 52px);
+  text-wrap: pretty;
+}
+[data-ground='dark'] .cn-lede,
+[data-ground='dark'] .cn-gate-lede,
+[data-ground='brand'] .cn-onboard-lede { color: var(--on-dark); }
+
+/* Mono label with a rule that draws in — the small technical mark above every
+   section heading. */
+.cn-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+.cn-kicker::before {
+  content: '';
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  transform-origin: left;
+  animation: wipeX 1s ease both;
+}
+.cn-kicker--light,
+.cn-kicker--onink { color: var(--brand-pale); }
+.cn-kicker--sage,
+.cn-kicker--neutral { color: var(--muted-2); }
+.cn-mb12 { margin-bottom: 14px; }
+.cn-mb16 { margin-bottom: 18px; }
+.cn-mb20 { margin-bottom: 22px; }
+
+.cn-num { font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.cn-shot { width: 100%; height: auto; }
 
 /* ── nav ──────────────────────────────────────────────────────────── */
 .cn-nav {
   position: sticky;
   top: 0;
-  z-index: 80;
+  z-index: 90;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px clamp(18px, 4vw, 40px);
-  background: color-mix(in srgb, #f5ead8 80%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, #201e1d 8%, transparent);
+  gap: 16px;
+  height: 64px;
+  padding: 0 var(--gutter);
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: saturate(1.6) blur(14px);
+  border-bottom: 1px solid var(--rule);
 }
-
-.cn-progress {
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  height: 3px;
-  width: 0%;
-  background: #a72608;
-}
-
-/* Anything using the display face that is not an h1–h6 needs the weight and
-   the variable axes spelled out — a div inherits body weight otherwise, and
-   Fraunces at 400 is a light serif. */
-.cn-brand,
-.cn-num {
-  font-family: var(--font-heading);
-  font-weight: var(--font-heading-weight);
-  font-variation-settings: var(--font-heading-axes);
-  font-optical-sizing: auto;
-}
-
-.cn-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 20px;
-  color: var(--color-text);
-}
-
-.cn-brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 9px;
-  background: #a72608;
-  display: inline-block;
-  box-shadow: inset 0 0 0 4px color-mix(in srgb, #f5ead8 85%, transparent);
-}
-
-.cn-nav-links {
-  display: flex;
-  align-items: center;
-  gap: clamp(14px, 2vw, 28px);
-  font-size: 14px;
-  font-weight: 600;
-}
-.cn-nav-links a { color: var(--color-neutral-900); }
+.cn-progress { position: absolute; bottom: -1px; left: 0; height: 2px; width: 0%; background: var(--brand); }
+.cn-brand { display: flex; align-items: center; min-height: 44px; }
+.cn-brand img { height: 26px; width: auto; }
+.cn-nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; font-weight: 600; }
+.cn-nav-links a { color: var(--muted); transition: color 0.2s; }
+.cn-nav-links a:not(.cn-btn):hover { color: var(--ink); }
 
 /* ── buttons ──────────────────────────────────────────────────────── */
 .cn-btn {
-  border-radius: 999px;
-  font-weight: 700;
-  display: inline-block;
-}
-.cn-nav-links .cn-btn--nav { background: #a72608; color: #fff; padding: 10px 20px; }
-.cn-nav-links .cn-btn--nav:hover { background: #7a2006; }
-
-.cn-btn--primary {
-  background: #a72608;
-  color: #fff;
-  padding: 17px 32px;
-  font-size: 16px;
-  box-shadow: var(--shadow-md);
-}
-.cn-btn--primary:hover { background: #7a2006; color: #fff; }
-
-.cn-btn--ghost {
-  border: 1.5px solid color-mix(in srgb, #201e1d 24%, transparent);
-  background: color-mix(in srgb, #f5ead8 60%, transparent);
-  color: var(--color-text);
-  padding: 16px 28px;
-  font-size: 16px;
-}
-.cn-btn--ghost:hover { background: var(--color-accent-200); color: var(--color-text); }
-
-/* Every `repeat(auto-fit, ...)` grid below wraps its floor in `min(…, 100%)`.
-   The second value in a minmax is a *minimum* track size, not a hint: give a
-   300px floor a 270px container and the track stays 300px and overflows it.
-   That is what cut the right-hand side off the demo form and its fields on a
-   360px phone — and it does not show up as a horizontal scrollbar, because
-   `overflow-x: hidden` on the body clips the overflow instead of scrolling to
-   it. Capping the floor at the width actually available costs nothing at any
-   size where the floor already fits, which is every desktop width. */
-
-/* ── section + surface primitives ─────────────────────────────────── */
-.cn-sec {
   position: relative;
-  z-index: 10;
-  padding: clamp(60px, 9vw, 120px) clamp(24px, 7vw, 110px);
-}
-
-/* Text takes one half of the viewport, the society keeps the other.
-   Sides alternate down the page, and the camera leans its subject the
-   opposite way (see `data-side` in scene.js) so the two never fight for the
-   same pixels. Below 1024px there is no room to split, so content goes back
-   to full width and the panels carry more fill instead. */
-/* `[data-side]` is here to win on specificity, not to select: each panel sets
-   its own max-width and `margin: 0 auto` further down the file, which would
-   otherwise tie with a single class and win on source order. */
-@media (min-width: 1024px) {
-  .cn-side[data-side] > * {
-    max-width: min(660px, 49vw);
-    margin-left: 0;
-    margin-right: 0;
-  }
-  .cn-side--right[data-side] > * { margin-left: auto; }
-  .cn-side--left[data-side] > * { margin-right: auto; }
-
-  /* The screens rail is the one exception: it is a filmstrip of imagery, not
-     text, and half a column shows barely one and a half cards. Its heading
-     keeps the side column; the strip itself runs full width underneath, where
-     it only takes the middle band of the viewport and leaves the society
-     visible above and below it. */
-  .cn-screens[data-side] > .cn-rail { max-width: none; }
-
-  /* The demo form is the other exception, and for the opposite reason to the
-     rail: it is already a two-column panel, but halved into the side it gets
-     528px of content against the 648px those columns need, so it silently
-     collapses to one. Heading, copy and four fields end up stacked in a panel
-     790px tall — taller than the viewport on a 1366x768 or 1280x720 laptop,
-     which is why the form ran off the bottom of the page.
-
-     Given the width its own layout asks for it lands at ~450px and the whole
-     section sits in one screen. 840px is the narrowest that still leaves both
-     columns readable, which keeps as much of the society in frame as possible
-     for the closing shot. */
-  .cn-cta[data-side] > * { max-width: min(840px, 92vw); }
-  .cn-cta[data-side] .cn-cta-panel { grid-template-columns: 1.05fr 1fr; gap: 44px; }
-
-  /* A section whose own layout is two columns would be halved twice and end
-     up with 300px of text. These collapse to one column inside the side. */
-  .cn-side[data-side] .cn-garden { grid-template-columns: 1fr; }
-  .cn-side[data-side] .cn-roles-table { min-width: 0; }
-  .cn-side[data-side] .cn-roles-table th,
-  .cn-side[data-side] .cn-roles-table td { padding-left: 10px; padding-right: 10px; }
-  .cn-side[data-side] .cn-roles-table th:first-child,
-  .cn-side[data-side] .cn-roles-table td:first-child { padding-left: 14px; padding-right: 14px; }
-}
-
-/* Panels are near-solid and carry no backdrop-filter.
-   They used to be see-through glass frosted over the scene, which needed a
-   blur+contrast+brightness pass on around nineteen elements. Every one of
-   those re-blurs its backdrop on each frame, and the backdrop here is a canvas
-   that repaints continuously — it was the single most expensive thing on the
-   page. Splitting text and scene onto opposite halves removes the need
-   entirely: nothing legible sits over the model any more. */
-.cn-surface {
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-}
-.cn-surface--md { box-shadow: var(--shadow-md); }
-.cn-surface--cream {
-  background: color-mix(in srgb, #faf4e6 96%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 66%, transparent);
-}
-.cn-surface--sage {
-  background: color-mix(in srgb, #e9f2dc 96%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 60%, transparent);
-}
-.cn-surface--ink {
-  background: color-mix(in srgb, #2b2822 96%, transparent);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--color-neutral-100);
-}
-
-.cn-kicker {
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-weight: 700;
-  margin-bottom: 18px;
-}
-.cn-kicker--neutral { color: var(--color-neutral-600); }
-.cn-kicker--accent { color: var(--color-accent-700); }
-.cn-kicker--sage { color: var(--color-accent-2-800); }
-.cn-kicker--light { color: var(--color-accent-300); }
-.cn-kicker--onink { opacity: 0.78; }
-.cn-mb12 { margin-bottom: 12px; }
-.cn-mb16 { margin-bottom: 16px; }
-.cn-mb20 { margin-bottom: 20px; }
-
-.cn-grid { display: grid; }
-
-/* ── hero ─────────────────────────────────────────────────────────── */
-.cn-hero {
-  position: relative;
-  z-index: 10;
-  min-height: 88vh;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: 60px clamp(24px, 7vw, 110px);
+  justify-content: center;
+  gap: 9px;
+  border-radius: 999px;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 15px;
+  min-height: 46px;
+  overflow: hidden;
+  transition: transform 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
+}
+.cn-btn:active { transform: translateY(1px); }
+.cn-nav-links .cn-btn--nav {
+  background: var(--brand);
+  color: #fff;
+  padding: 0 18px;
+  min-height: 40px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.cn-nav-links .cn-btn--nav:hover { background: var(--brand-deep); color: #fff; }
+.cn-btn--primary { background: var(--brand); color: #fff; padding: 15px 28px; }
+.cn-btn--primary:hover { background: var(--brand-deep); color: #fff; }
+/* A light sweeps the primary action every five seconds. */
+.cn-btn--primary::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  animation: sheen 5s ease-in-out infinite;
   pointer-events: none;
 }
+.cn-btn--ghost { border: 1px solid var(--rule-2); color: var(--ink); padding: 14px 24px; background: #fff; }
+.cn-btn--ghost:hover { border-color: var(--brand); color: var(--brand); }
+[data-ground='dark'] .cn-btn--ghost,
+.cn-hero .cn-btn--ghost { background: transparent; border-color: var(--on-dark-3); color: #fff; }
+[data-ground='dark'] .cn-btn--ghost:hover,
+.cn-hero .cn-btn--ghost:hover { border-color: #fff; color: #fff; }
 
-.cn-hero-copy { max-width: 780px; pointer-events: auto; }
-
+/* ── hero ─────────────────────────────────────────────────────────── */
+.cn-hero { position: relative; background: var(--ink); color: #fff; overflow: clip; }
+.cn-hero-track { height: 240vh; }
+.cn-hero-stage {
+  position: sticky;
+  top: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  align-items: center;
+  gap: clamp(28px, 4vw, 56px);
+  max-width: var(--page);
+  margin-inline: auto;
+  padding: 88px var(--gutter) 56px;
+}
+.cn-hero-copy { position: relative; z-index: 3; }
+/* Sized so the longest line holds together in the copy column; above this it
+   breaks mid-phrase, which is worse than being a little smaller. */
+.cn-hero h1 { font-size: clamp(36px, 4.5vw, 62px); line-height: 1.02; letter-spacing: -0.038em; margin: 0 0 22px; }
+.cn-hero h1 > span { display: block; animation: rise 1s ease both; }
+.cn-hero h1 > span:nth-child(2) { animation-delay: 0.1s; }
+.cn-hero h1 > span:nth-child(3) { animation-delay: 0.2s; color: var(--brand-pale); }
+.cn-hero p {
+  font-size: clamp(15.5px, 1.25vw, 18px);
+  line-height: 1.6;
+  color: var(--on-dark);
+  max-width: 46ch;
+  margin: 0 0 30px;
+  animation: riseSm 0.9s ease both 0.3s;
+}
 .cn-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 2px;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-accent-700);
-  background: color-mix(in srgb, #fff 62%, transparent);
-  padding: 9px 17px;
+  color: var(--brand-pale);
+  border: 1px solid var(--on-dark-3);
   border-radius: 999px;
-  margin-bottom: 26px;
+  padding: 7px 14px;
+  margin-bottom: 24px;
+  animation: fade 0.8s ease both;
 }
-.cn-badge-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--color-accent-2-600);
-}
-
-.cn-hero h1 {
-  font-size: clamp(42px, 7vw, 96px);
-  line-height: 0.99;
-  margin: 0 0 26px;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-.cn-hero h1 span { color: #a72608; }
-
-.cn-hero p {
-  font-size: clamp(17px, 1.5vw, 21px);
-  line-height: 1.55;
-  max-width: 540px;
-  color: var(--color-neutral-800);
-  margin: 0 0 36px;
-  text-wrap: pretty;
-}
-
-.cn-hero-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
-
+.cn-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-hot); animation: blink 2.4s ease-in-out infinite; }
+.cn-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; animation: riseSm 1s ease both 0.4s; }
 .cn-scroll-hint {
   position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--color-neutral-900);
-  animation: cn-pulse 2.6s ease-in-out infinite;
-}
-
-/* ── problem ──────────────────────────────────────────────────────── */
-.cn-problem-panel { max-width: 1140px; margin: 0 auto; padding: clamp(34px, 5vw, 68px); }
-
-.cn-problem-panel h2 {
-  font-size: clamp(30px, 4.2vw, 56px);
-  line-height: 1.06;
-  margin: 0 0 52px;
-  max-width: 780px;
-}
-
-.cn-problem-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-  gap: 18px;
-}
-
-.cn-problem-card {
-  background: color-mix(in srgb, #ffffff 40%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 55%, transparent);
-  border-radius: var(--radius-lg);
-  padding: 30px 26px 34px;
-}
-.cn-problem-card .cn-num {
-  font-family: var(--font-heading);
-  font-size: 32px;
-  color: var(--color-accent-400);
-  margin-bottom: 12px;
-}
-/* Card titles run in the body face at a real 800. They inherited the display
-   face from the base h3 rule, which only ships weight 400, so asking it for
-   800 got a synthesised bold that read as mush at this size. */
-.cn-problem-card h3 { font-family: var(--font-body); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 8px; }
-.cn-problem-card p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--color-neutral-900); }
-
-/* ── the gate ─────────────────────────────────────────────────────── */
-.cn-gate-panel {
-  max-width: 1140px;
-  margin: 0 auto;
-  background: color-mix(in srgb, #a72608 96%, transparent);
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  color: #fff;
-  border-radius: var(--radius-lg);
-  padding: clamp(34px, 5vw, 68px);
-  box-shadow: var(--shadow-lg);
-}
-.cn-gate-panel h2 { font-size: clamp(30px, 4.4vw, 58px); line-height: 1.05; margin: 0 0 14px; }
-.cn-gate-lede { font-size: 18px; max-width: 620px; opacity: 0.9; line-height: 1.6; margin: 0 0 48px; }
-
-.cn-gate-grid { grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 20px; }
-.cn-gate-step {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: var(--radius-lg);
-  padding: 30px 26px;
-}
-.cn-gate-step .cn-num { font-family: var(--font-heading); font-size: 38px; opacity: 0.55; margin-bottom: 14px; }
-.cn-gate-step h3 { font-family: var(--font-body); margin: 0 0 8px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
-.cn-gate-step p { margin: 0; font-size: 15px; line-height: 1.6; opacity: 0.86; }
-
-.cn-gate-notes {
-  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-  gap: 28px;
-  margin-top: 48px;
-  font-size: 14.5px;
-  opacity: 0.92;
-}
-.cn-gate-notes strong { display: block; margin-bottom: 4px; }
-
-/* ── three audiences ──────────────────────────────────────────────── */
-.cn-aud-wrap { max-width: 1180px; margin: 0 auto; }
-
-.cn-aud-intro { padding: clamp(30px, 4vw, 54px); margin-bottom: 24px; }
-.cn-aud-intro h2 { font-size: clamp(30px, 4.2vw, 56px); line-height: 1.06; margin: 0 0 14px; }
-.cn-aud-intro p { font-size: 17px; color: var(--color-neutral-900); max-width: 560px; margin: 0; line-height: 1.6; }
-
-.cn-aud-grid { grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 22px; }
-
-/* These four sit directly over the busiest part of the 3D scene — tiled
-   roofs, tree canopies and a dark tower — so they carry more fill than the
-   other panels and frost what is behind them. Below ~85% the backdrop's
-   edges read straight through the body copy.
-
-   Four is also what the grid wants. The side column caps this wrap at 660px,
-   which fits two 290px tracks and not three, so the set reads as 2×2 — with
-   three cards the last one sat alone on its own row. */
-.cn-aud {
-  border-radius: var(--radius-lg);
-  padding: 34px 30px 0;
-  overflow: hidden;
+  left: var(--gutter);
+  bottom: 26px;
   display: flex;
-  flex-direction: column;
-}
-.cn-aud--res {
-  background: color-mix(in srgb, #fffdf7 96%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 68%, transparent);
-  box-shadow: var(--shadow-lg);
-}
-.cn-aud--com {
-  background: color-mix(in srgb, #e9f2dc 96%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 60%, transparent);
-  box-shadow: var(--shadow-lg);
-}
-.cn-aud--sec {
-  background: color-mix(in srgb, #2b2822 96%, transparent);
-  color: var(--color-neutral-100);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: var(--shadow-lg);
-}
-/* Warm clay, so the second row reads dark/light the way the first reads
-   light/sage rather than repeating either. */
-.cn-aud--stf {
-  background: color-mix(in srgb, #fae3d3 96%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 62%, transparent);
-  box-shadow: var(--shadow-lg);
-}
-.cn-aud h3 { font-size: 28px; margin: 0 0 16px; }
-.cn-aud--sec h3 { color: #fff; }
-.cn-aud ul {
-  margin: 0 0 26px;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-size: 15px;
-  line-height: 1.5;
-}
-.cn-aud--res ul { color: var(--color-neutral-900); }
-.cn-aud--com ul { color: var(--color-accent-2-900); }
-.cn-aud--sec ul { color: var(--color-neutral-300); }
-.cn-aud--stf ul { color: var(--color-accent-900); }
-
-.cn-aud-shot { margin-top: auto; height: 200px; overflow: hidden; display: flex; justify-content: center; }
-.cn-aud-shot img {
-  width: 62%;
-  height: auto;
-  align-self: flex-start;
-  filter: drop-shadow(0 16px 30px color-mix(in srgb, #2e2b25 22%, transparent));
-}
-.cn-aud--sec .cn-aud-shot img { filter: drop-shadow(0 16px 34px rgba(0, 0, 0, 0.5)); }
-
-/* Every app screenshot on the page is a ~75% transparent PNG, so it takes the
-   colour of whatever is behind it — over the 3D scene that means towers and
-   tree canopies show through the UI. They all sit on a plate instead. */
-.cn-aud-shot img,
-.cn-garden-shots img {
-  background: #fbf7ee;
-  border-radius: 14px 14px 0 0;
-}
-
-/* ── garden / amenities ───────────────────────────────────────────── */
-.cn-garden {
-  max-width: 1140px;
-  margin: 0 auto;
-  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-  gap: 24px;
   align-items: center;
-}
-.cn-garden-copy { padding: clamp(30px, 4vw, 54px); }
-.cn-garden-copy h2 { font-size: clamp(28px, 3.6vw, 46px); line-height: 1.07; margin: 0 0 16px; }
-.cn-garden-copy p { font-size: 16.5px; line-height: 1.6; color: var(--color-accent-2-900); margin: 0 0 20px; }
-.cn-chips { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
-.cn-chips li {
-  background: color-mix(in srgb, #fff 60%, transparent);
-  border-radius: 999px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.cn-garden-shots { display: flex; justify-content: center; gap: 20px; }
-.cn-garden-shots img {
-  width: 46%;
-  height: auto;
-  max-width: 250px;
-  filter: drop-shadow(0 26px 44px color-mix(in srgb, #2e2b25 30%, transparent));
-}
-.cn-garden-shots img + img { margin-top: 44px; }
-
-/* ── play area / everyday life ────────────────────────────────────── */
-.cn-play-panel { max-width: 1140px; margin: 0 auto; padding: clamp(30px, 4vw, 60px); }
-.cn-play-panel h2 {
-  font-size: clamp(28px, 3.8vw, 48px);
-  line-height: 1.07;
-  margin: 0 0 40px;
-  color: #fff;
-  max-width: 720px;
-}
-.cn-play-grid { grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 26px; }
-.cn-play-grid h3 { font-family: var(--font-body); margin: 0 0 8px; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: #fff; }
-.cn-play-grid p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--color-neutral-300); }
-
-/* ── roles ────────────────────────────────────────────────────────── */
-.cn-roles-panel { max-width: 1100px; margin: 0 auto; padding: clamp(30px, 4vw, 60px); }
-.cn-roles-panel h2 { font-size: clamp(30px, 4.2vw, 54px); line-height: 1.06; margin: 0 0 16px; }
-.cn-roles-lede { font-size: 17px; color: var(--color-neutral-900); max-width: 620px; margin: 0 0 42px; line-height: 1.6; }
-
-.cn-roles-scroll {
-  overflow-x: auto;
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, #ffffff 40%, transparent);
-  padding: 6px;
-}
-.cn-roles-table { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 620px; }
-.cn-roles-table th {
-  text-align: left;
-  padding: 18px 12px;
-  font-size: 10px;
-  letter-spacing: 2px;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-neutral-600);
-  font-weight: 700;
+  color: var(--on-dark-2);
+  z-index: 3;
 }
-.cn-roles-table th:first-child,
-.cn-roles-table td:first-child { padding-left: 20px; padding-right: 20px; }
-.cn-roles-table tbody tr { border-top: 1px solid var(--color-neutral-300); }
-.cn-roles-table td { padding: 18px 12px; }
-.cn-roles-table td:first-child { font-weight: 700; }
-.cn-yes { color: var(--color-accent-2-700); font-weight: 700; }
-.cn-no { color: var(--color-neutral-500); }
-.cn-roles-foot {
-  font-size: 14px;
-  color: var(--color-neutral-600);
-  margin: 20px 0 0;
-  max-width: 640px;
-  line-height: 1.6;
+.cn-scroll-hint::after { content: '↓'; animation: bobY 2.4s ease-in-out infinite; }
+
+/* ── hero mock-ups ────────────────────────────────────────────────────
+   Not screenshots: small live pieces of the product, so the gate is shown
+   working rather than described. Opposing clocks, so they never sync up. */
+.cn-hero-media { position: relative; z-index: 2; display: grid; gap: 16px; justify-items: end; }
+.cn-mock {
+  width: min(340px, 100%);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--rule-dark);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-lg);
 }
-
-/* ── screens rail ─────────────────────────────────────────────────── */
-.cn-screens { position: relative; z-index: 10; padding: clamp(60px, 9vw, 120px) 0; }
-.cn-screens-head { padding: 0 clamp(24px, 7vw, 110px); max-width: 1180px; margin: 0 auto 36px; }
-.cn-screens-head > div { padding: clamp(26px, 3.4vw, 44px); }
-.cn-screens-head h2 { font-size: clamp(28px, 3.6vw, 46px); margin: 0; }
-
-.cn-rail {
+.cn-mock--pass { position: relative; overflow: hidden; animation: floatUp 9s ease-in-out infinite alternate; }
+.cn-mock--log { animation: floatDown 11s ease-in-out infinite alternate; width: min(300px, 100%); }
+.cn-mock-head {
   display: flex;
-  gap: 40px;
-  padding: 0 clamp(24px, 7vw, 110px);
-  overflow-x: auto;
-  align-items: stretch;
-  scrollbar-width: none;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--on-dark-2);
+  margin-bottom: 14px;
 }
-/* Each screen rides on its own card. Bare over the 3D the caption fell on
-   whatever happened to be behind it — usually a tree. */
-.cn-rail-item {
-  flex: 0 0 auto;
-  width: 292px;
-  display: flex;
-  flex-direction: column;
-  padding: 16px 16px 22px;
-  background: color-mix(in srgb, #fffdf7 96%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 66%, transparent);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
-}
-.cn-rail-item:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-
-/* The screen sits in a well and is cropped to its top — the head of each
-   screen is the part worth showing, and a full 1170×2532 render would make
-   every card twice as tall as it needs to be. */
-.cn-rail-shot {
+.cn-mock-flat { color: var(--brand-pale); }
+.cn-mock-qr {
   position: relative;
-  height: 356px;
-  border-radius: 20px;
+  height: 132px;
+  border-radius: var(--r-md);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.14) 0 6px, transparent 6px 12px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.1) 0 6px, transparent 6px 12px),
+    rgba(255, 255, 255, 0.04);
   overflow: hidden;
-  background: linear-gradient(180deg, #fdf9f1 0%, #f3ebdc 100%);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, #201e1d 9%, transparent),
-    0 10px 22px color-mix(in srgb, #2e2b25 15%, transparent);
 }
-.cn-rail-shot img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  object-position: top center;
+.cn-mock-scan {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--brand-hot), transparent);
+  box-shadow: 0 0 18px 2px rgba(228, 87, 46, 0.7);
+  animation: scan 3.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
-.cn-rail-shot::after {
+.cn-mock-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--brand-pale);
+}
+.cn-live { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--brand-hot); flex: none; }
+.cn-live::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 70px;
-  background: linear-gradient(to bottom, rgba(247, 239, 225, 0), #f4ecdd);
-  pointer-events: none;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid var(--brand-hot);
+  animation: pulseRing 2s ease-out infinite;
 }
-
-.cn-rail-cap { margin-top: 18px; font-size: 14px; color: var(--color-neutral-900); line-height: 1.5; }
-.cn-rail-cap strong {
-  color: var(--color-text);
-  display: block;
-  font-size: 16px;
-  margin-bottom: 3px;
+.cn-mock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid var(--rule-dark);
+  font-size: 14px;
 }
-
-/* ── features ─────────────────────────────────────────────────────── */
-.cn-features-panel { max-width: 1180px; margin: 0 auto; padding: clamp(30px, 4vw, 60px); }
-.cn-features-panel h2 { font-size: clamp(30px, 4.2vw, 54px); line-height: 1.06; margin: 0 0 44px; }
-.cn-features-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
-  gap: 1px;
-  background: color-mix(in srgb, #ffffff 34%, transparent);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-.cn-feature { background: color-mix(in srgb, #ffffff 34%, transparent); padding: 26px 24px 30px; }
-.cn-feature-tag {
+.cn-mock-row:first-of-type { border-top: 0; }
+.cn-mock-name { font-weight: 600; }
+.cn-mock-tag {
+  font-family: var(--mono);
   font-size: 10px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--color-accent-700);
-  font-weight: 700;
-  margin-bottom: 10px;
+  letter-spacing: 0.1em;
+  color: var(--brand-hot);
+  border: 1px solid rgba(228, 87, 46, 0.4);
+  border-radius: 999px;
+  padding: 3px 8px;
 }
-.cn-feature h3 { font-family: var(--font-body); margin: 0 0 7px; font-size: 16.5px; font-weight: 700; letter-spacing: -0.01em; }
-.cn-feature p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--color-neutral-900); }
+.cn-mock-time { font-family: var(--mono); font-size: 11px; color: var(--on-dark-2); }
 
-/* ── onboarding ───────────────────────────────────────────────────── */
-.cn-onboard-panel { max-width: 1140px; margin: 0 auto; padding: clamp(30px, 4vw, 60px); }
-.cn-onboard-panel h2 { font-size: clamp(30px, 4.2vw, 54px); line-height: 1.06; margin: 0 0 16px; }
-.cn-onboard-lede { font-size: 17px; color: var(--color-accent-2-900); max-width: 600px; margin: 0 0 44px; line-height: 1.6; }
-.cn-onboard-grid { grid-template-columns: repeat(auto-fit, minmax(min(215px, 100%), 1fr)); gap: 20px; }
-.cn-onboard-card {
-  background: color-mix(in srgb, #ffffff 46%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 55%, transparent);
-  border-radius: var(--radius-lg);
-  padding: 28px 24px 32px;
+/* ── ticker ───────────────────────────────────────────────────────── */
+.cn-ticker {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 0;
+  border-top: 1px solid var(--rule-brand);
+  border-bottom: 1px solid var(--rule-brand);
+  background: var(--paper-warm);
 }
-.cn-onboard-card .cn-num { font-family: var(--font-heading); font-size: 28px; color: var(--color-accent-600); margin-bottom: 10px; }
-.cn-onboard-card h3 { font-family: var(--font-body); margin: 0 0 7px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
-.cn-onboard-card p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--color-accent-2-900); }
+.cn-ticker-run { display: flex; width: max-content; animation: marquee 30s linear infinite; }
+.cn-ticker:hover .cn-ticker-run { animation-play-state: paused; }
+.cn-ticker-set { display: flex; align-items: center; gap: 34px; padding-right: 34px; }
+.cn-ticker-set span {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  white-space: nowrap;
+}
+.cn-ticker-set span::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--brand-pale); flex: none; }
+
+/* ── card grids ───────────────────────────────────────────────────── */
+.cn-problem-grid,
+.cn-features-grid,
+.cn-onboard-grid,
+.cn-play-grid { display: grid; gap: 14px; }
+@media (min-width: 800px) {
+  .cn-problem-grid,
+  .cn-features-grid,
+  .cn-onboard-grid,
+  .cn-play-grid { grid-template-columns: 1fr 1fr; }
+}
+.cn-problem-card,
+.cn-feature,
+.cn-onboard-card,
+.cn-play-grid > div {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  padding: 24px 24px 26px;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.35s, box-shadow 0.35s;
+}
+.cn-problem-card:hover,
+.cn-feature:hover,
+.cn-onboard-card:hover,
+.cn-play-grid > div:hover { transform: translateY(-3px); border-color: var(--brand-wash); box-shadow: var(--shadow-md); }
+[data-ground='brand'] .cn-onboard-card { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.18); }
+[data-ground='brand'] .cn-onboard-card:hover { background: rgba(255, 255, 255, 0.13); border-color: rgba(255, 255, 255, 0.3); box-shadow: none; }
+.cn-problem-card .cn-num,
+.cn-onboard-card .cn-num { display: block; font-size: 12px; letter-spacing: 0.14em; color: var(--brand); margin-bottom: 14px; }
+[data-ground='brand'] .cn-onboard-card .cn-num { color: var(--brand-pale); }
+.cn-feature-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--brand);
+  background: var(--brand-tint);
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-bottom: 12px;
+}
+.cn-problem-card h3,
+.cn-feature h3,
+.cn-onboard-card h3,
+.cn-play-grid h3 { font-size: 17.5px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 8px; color: var(--ink); }
+[data-ground='brand'] .cn-onboard-card h3 { color: #fff; }
+.cn-problem-card p,
+.cn-feature p,
+.cn-onboard-card p,
+.cn-play-grid p { margin: 0; font-size: 15px; line-height: 1.58; color: var(--muted); }
+[data-ground='brand'] .cn-onboard-card p { color: var(--on-dark); }
+
+/* ── the gate ─────────────────────────────────────────────────────── */
+.cn-pin { padding: 0; }
+.cn-gate-panel { padding: var(--band) var(--gutter); }
+.cn-gate-panel > * { max-width: var(--page); margin-inline: auto; }
+.cn-gate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; }
+.cn-gate-step {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--rule-dark);
+  border-radius: var(--r-lg);
+  padding: 24px;
+  transition: background 0.5s, border-color 0.5s, opacity 0.5s, transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.cn-gate-step .cn-num { display: block; font-size: 12px; letter-spacing: 0.14em; color: var(--brand-pale); margin-bottom: 14px; }
+.cn-gate-step h3 { font-size: 17.5px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 8px; color: #fff; }
+.cn-gate-step p { margin: 0; font-size: 15px; line-height: 1.58; color: var(--on-dark-2); }
+.cn-gate-notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 22px;
+  margin-top: clamp(30px, 4vw, 52px);
+  font-size: 14.5px;
+  color: var(--on-dark-2);
+}
+.cn-gate-notes strong { display: block; margin-bottom: 5px; color: #fff; font-weight: 700; }
+
+/* ── audiences ────────────────────────────────────────────────────── */
+.cn-aud-wrap { display: grid; gap: clamp(28px, 4vw, 52px); }
+.cn-aud-intro p { font-size: clamp(16px, 1.3vw, 18.5px); line-height: 1.6; color: var(--muted); max-width: 56ch; margin: 0; }
+.cn-aud-grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; }
+.cn-aud {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  padding: 24px 24px 0;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: #fff;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.35s;
+}
+.cn-aud:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.cn-aud--com { background: var(--brand-tint); border-color: var(--brand-wash); }
+.cn-aud--sec { background: var(--ink); border-color: rgba(255, 255, 255, 0.14); color: #fff; }
+.cn-aud--stf { background: var(--paper-warm); }
+.cn-aud h3 { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 14px; }
+.cn-aud--sec h3 { color: #fff; }
+.cn-aud ul { display: flex; flex-direction: column; gap: 10px; font-size: 14.5px; line-height: 1.5; color: var(--muted); margin: 0 0 22px; }
+.cn-aud--sec ul { color: var(--on-dark-2); }
+.cn-aud li { padding-left: 18px; position: relative; }
+.cn-aud li::before { content: ''; position: absolute; left: 0; top: 7px; width: 7px; height: 7px; border-radius: 2px; background: var(--brand); }
+.cn-aud--sec li::before { background: var(--brand-hot); }
+.cn-aud-shot { margin-top: auto; height: 170px; overflow: hidden; display: flex; justify-content: center; }
+.cn-aud-shot .cn-shot { width: 66%; align-self: flex-start; border-radius: 12px 12px 0 0; }
+
+/* ── amenities ────────────────────────────────────────────────────── */
+.cn-garden {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: clamp(28px, 4vw, 64px);
+  align-items: center;
+  padding-inline: var(--gutter);
+}
+.cn-garden-copy h2 { color: var(--ink); }
+.cn-garden-copy p { font-size: 16.5px; line-height: 1.6; color: var(--muted); margin: 0 0 24px; max-width: 46ch; }
+.cn-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cn-chips li {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand);
+  background: #fff;
+  border: 1px solid var(--brand-wash);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+.cn-garden-shots { display: flex; justify-content: center; gap: 16px; align-items: flex-end; }
+.cn-garden-shots .cn-shot { max-width: 176px; border-radius: var(--r-md); box-shadow: var(--shadow-lg); }
+.cn-garden-shots .cn-shot:nth-child(2) { margin-bottom: 40px; }
+
+/* ── roles ────────────────────────────────────────────────────────── */
+.cn-roles-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--r-lg); background: #fff; }
+.cn-roles-table { width: 100%; font-size: 14.5px; min-width: 660px; }
+.cn-roles-table th {
+  text-align: left;
+  padding: 16px 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted-3);
+  background: var(--paper-warm);
+}
+.cn-roles-table td { padding: 16px 14px; color: var(--muted); vertical-align: top; }
+.cn-roles-table td:first-child { color: var(--ink); font-weight: 700; }
+.cn-roles-table tbody tr { border-top: 1px solid var(--rule); }
+.cn-yes { color: var(--brand); font-weight: 600; }
+.cn-no { color: var(--muted-3); }
+.cn-roles-foot { margin: 22px 0 0; font-size: 14.5px; line-height: 1.6; color: var(--muted-2); max-width: 66ch; }
+
+/* ── the rail ─────────────────────────────────────────────────────── */
+.cn-screens-head { max-width: var(--page); margin: 0 auto clamp(28px, 4vw, 46px); padding-inline: var(--gutter); position: relative; z-index: 2; }
+.cn-rail {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 0 var(--gutter) 20px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  position: relative;
+  z-index: 2;
+}
+.cn-rail::-webkit-scrollbar { display: none; }
+.cn-rail-item {
+  flex: 0 0 auto;
+  width: 244px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 14px 18px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--rule-dark);
+  border-radius: var(--r-lg);
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), background 0.35s;
+}
+.cn-rail-item:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.1); }
+.cn-rail-shot { height: 280px; border-radius: var(--r-md); overflow: hidden; background: rgba(0, 0, 0, 0.25); }
+.cn-rail-shot .cn-shot { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+.cn-rail-cap { margin-top: 14px; font-size: 13.5px; line-height: 1.5; color: var(--on-dark-2); }
+.cn-rail-cap strong { display: block; font-size: 15.5px; font-weight: 700; letter-spacing: -0.018em; margin-bottom: 4px; color: #fff; }
 
 /* ── faq ──────────────────────────────────────────────────────────── */
-.cn-faq { padding: clamp(60px, 9vw, 110px) clamp(24px, 7vw, 110px); }
-.cn-faq-panel { max-width: 880px; margin: 0 auto; padding: clamp(30px, 4vw, 56px); }
-.cn-faq-panel h2 { font-size: clamp(28px, 4vw, 48px); line-height: 1.06; margin: 0 0 34px; }
-.cn-faq-item { border-top: 1px solid var(--color-neutral-300); }
+.cn-faq-panel { max-width: 880px; margin: 0 auto; }
+.cn-faq-item { border-bottom: 1px solid var(--rule); }
 .cn-faq-item summary {
   cursor: pointer;
   padding: 22px 0;
-  font-size: 18px;
+  font-size: 17.5px;
   font-weight: 700;
+  letter-spacing: -0.02em;
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 22px;
   align-items: center;
+  min-height: 44px;
+  transition: color 0.2s;
 }
-.cn-faq-item summary span { color: var(--color-accent-600); font-size: 22px; line-height: 1; }
-.cn-faq-item p {
-  margin: 0 0 24px;
-  font-size: 15.5px;
-  line-height: 1.65;
-  color: var(--color-neutral-900);
-  max-width: 680px;
-}
+.cn-faq-item summary:hover { color: var(--brand); }
+.cn-faq-item summary span { color: var(--brand); font-size: 22px; line-height: 1; transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1); }
+.cn-faq-item[open] summary span { transform: rotate(45deg); }
+.cn-faq-item p { margin: 0 0 24px; font-size: 15.5px; line-height: 1.62; color: var(--muted); max-width: 66ch; animation: riseSm 0.4s ease both; }
 
 /* ── cta ──────────────────────────────────────────────────────────── */
-/* Shallower top padding than the other sections: this one has to clear the
-   sticky nav and still fit its panel between it and the footer on a short
-   laptop, and 9vw was spending 120px of that budget on air. */
-.cn-cta { padding: clamp(56px, 6vw, 96px) clamp(24px, 7vw, 110px) clamp(50px, 6vw, 80px); }
 .cn-cta-panel {
-  max-width: 1080px;
-  margin: 0 auto;
-  background: color-mix(in srgb, #2b2822 96%, transparent);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  border-radius: var(--radius-lg);
-  padding: clamp(32px, 4.4vw, 66px);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-  gap: 48px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.86fr);
+  gap: clamp(28px, 4vw, 64px);
   align-items: start;
-  box-shadow: var(--shadow-lg);
 }
-.cn-cta-panel h2 { font-size: clamp(30px, 4vw, 52px); line-height: 1.05; margin: 0 0 18px; color: #fff; }
-.cn-cta-panel > div > p {
-  font-size: 16.5px;
-  line-height: 1.6;
-  color: var(--color-neutral-300);
-  margin: 0 0 26px;
-  max-width: 440px;
-}
-.cn-cta-note { font-size: 14px; color: var(--color-neutral-500); line-height: 1.8; }
-
-.cn-form { display: flex; flex-direction: column; gap: 12px; }
+.cn-cta-panel h2 { color: #fff; }
+.cn-cta-panel > div > p { font-size: 16.5px; line-height: 1.6; color: var(--on-dark); margin: 0 0 24px; max-width: 44ch; }
+.cn-cta-note { font-family: var(--mono); font-size: 12.5px; color: var(--on-dark-2); line-height: 2; }
+.cn-form { display: flex; flex-direction: column; gap: 10px; }
 .cn-form input {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  padding: 15px 22px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--rule-dark);
+  border-radius: var(--r-md);
+  padding: 15px 18px;
   color: #fff;
   font-size: 15px;
-  font-family: var(--font-body);
+  font-family: var(--font);
+  min-height: 50px;
+  transition: border-color 0.2s, background 0.2s;
 }
+.cn-form input::placeholder { color: var(--on-dark-3); }
+.cn-form input:focus { border-color: var(--brand-hot); background: rgba(255, 255, 255, 0.1); }
 .cn-form button {
-  background: #a72608;
+  margin-top: 6px;
+  background: var(--brand);
   color: #fff;
-  border: none;
+  border: 0;
   border-radius: 999px;
-  padding: 17px 22px;
-  font-size: 16px;
+  padding: 16px 24px;
+  font-size: 15.5px;
   font-weight: 700;
-  font-family: var(--font-body);
+  font-family: var(--font);
   cursor: pointer;
-  margin-top: 4px;
+  min-height: 52px;
+  transition: background 0.2s;
 }
-.cn-form button:hover { background: #7a2006; }
+.cn-form button:hover { background: var(--brand-bright); }
 
 /* ── footer ───────────────────────────────────────────────────────── */
 .cn-footer {
-  position: relative;
-  z-index: 10;
-  padding: 30px clamp(24px, 7vw, 110px) 50px;
+  background: var(--ink);
+  color: var(--on-dark-2);
+  padding: 26px var(--gutter) 40px;
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   justify-content: space-between;
-  font-size: 13px;
-  color: var(--color-neutral-900);
+  font-size: 13.5px;
+  border-top: 1px solid var(--rule-dark);
 }
 
-/* ── phones ───────────────────────────────────────────────────────────
-   Everything above was written for a viewport wide enough to put text on
-   one half and the society on the other. The only breakpoint in the file
-   was `min-width: 1024px`, so a phone got the desktop rules with nothing
-   holding them: the nav laid out 391px of content into 324px of room and
-   wrapped, and the hero copy sat directly on the render with nothing
-   between it and a building.
+/* ── scroll-driven ────────────────────────────────────────────────────
+   Gated on flags useMotion sets only while it is driving. Without them these
+   are ordinary flow, which is what reduced motion and a blocked script get —
+   the other way round leaves a 300vh empty track and dimmed cards. */
+.cn-pin[data-pin-live] .cn-pin-track { height: 300vh; }
+.cn-pin[data-pin-live] .cn-pin-stage { position: sticky; top: 0; min-height: 100vh; display: flex; align-items: center; }
+.cn-pin[data-pin-live] .cn-pin-stage > * { width: 100%; }
+.cn-pin[data-pin-live] .cn-gate-step { opacity: 0.34; transform: translateY(10px); }
+.cn-pin[data-pin-live] .cn-gate-step[data-on] { opacity: 1; transform: none; background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.26); }
+.cn-hero:not([data-hero-live]) .cn-hero-track { height: auto; }
+.cn-hero:not([data-hero-live]) .cn-hero-stage { position: static; min-height: 0; }
 
-   This block is capped at 720px and touches nothing a desktop sees. */
+@media (min-width: 900px) {
+  .cn-features-panel { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: start; }
+  .cn-features-head { position: sticky; top: 96px; }
+}
+
+[data-parallax] { will-change: transform; }
+
+/* ── tablet ───────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .cn-hero-stage,
+  .cn-garden,
+  .cn-cta-panel { grid-template-columns: 1fr; }
+  .cn-hero-track { height: auto; }
+  .cn-hero-stage { position: static; min-height: 0; padding-top: 64px; }
+  .cn-hero-media { justify-items: start; }
+  .cn-scroll-hint { display: none; }
+  .cn-garden-shots { justify-content: flex-start; }
+}
+
+/* ── phones ───────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
-  /* The bar was translucent enough for section headings to read straight
-     through it while they scrolled past. At this size a heading is 30px and
-     the effect is not subtle, so the bar becomes near-solid. */
-  .cn-nav {
-    padding: 8px 16px;
-    background: color-mix(in srgb, #f5ead8 97%, transparent);
-  }
-
-  /* The three section links go, and the one action stays. Brand, links and
-     button do not fit — that is the 391-into-324 above, and it is why "The
-     gate" broke onto two lines and "Book a demo" hung off the right edge.
-     The page is one continuous scroll, so those jumps are a convenience;
-     the demo is the thing someone came to press. */
+  .cn-nav { padding: 0 18px; height: 58px; }
   .cn-nav-links a:not(.cn-btn--nav) { display: none; }
-
-  /* 44px minimums: the brand was 110x31 and the links 35x22, which is below
-     what a thumb reliably hits. */
-  .cn-brand {
-    font-size: 18px;
-    gap: 8px;
-    min-height: 44px;
-  }
-  .cn-brand-mark { width: 22px; height: 22px; border-radius: 7px; }
-  .cn-nav-links .cn-btn--nav {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 11px 18px;
-    white-space: nowrap;
-  }
-
-  /* The veil over the render runs left-to-right on a wide screen, because
-     that is the half the text sits in. In portrait the text is not to one
-     side of the society, it is on top of it, so the gradient turns to run
-     down the screen instead — heaviest where the copy is, clearing by the
-     bottom so the model is still the thing you are looking at. */
-  .cn-scrim {
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, #f5ead8 92%, transparent) 0%,
-      color-mix(in srgb, #f5ead8 72%, transparent) 40%,
-      color-mix(in srgb, #f5ead8 34%, transparent) 68%,
-      transparent 92%
-    );
-  }
-
-  /* 42px was the floor of the hero clamp, which at 360px is eight characters
-     to a line and five lines before the sub-head. */
-  .cn-hero { min-height: 90vh; padding: 44px 22px; }
-  .cn-hero h1 { font-size: clamp(34px, 9.4vw, 46px); }
-  .cn-hero p { font-size: 16.5px; margin-bottom: 28px; }
-  /* Two buttons at their natural widths stagger; full width reads as a stack
-     of actions and gives each one a full-thumb target. */
-  .cn-hero-actions { gap: 10px; }
-  .cn-hero-actions .cn-btn--primary,
-  .cn-hero-actions .cn-btn--ghost {
-    width: 100%;
-    text-align: center;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .cn-cta-panel { padding: 26px 20px; gap: 28px; }
-
-  /* ── card sizing ──
-     The cards were drawn for a desktop column and kept every one of its
-     measurements on a 360px screen: 26–34px of padding on all sides, headings
-     at 28px, and a 200px slot for a phone mock. An audience card came out
-     540px tall — three quarters of the viewport for one card — and there are
-     sixteen feature cards at ~200px each behind it.
-
-     Nothing here is a different design, only the same one at a size that suits
-     the screen: padding in from the edges instead of a desktop margin, one
-     step down the type scale, tighter gaps between stacked cards. All of it
-     compounds, because narrower padding gives the text more width, which is
-     fewer lines, which is a shorter card again. */
-
-  /* Panels hold the cards, so their padding is the cards' width. */
-  .cn-aud-intro,
-  .cn-gate-panel,
-  .cn-play-panel,
-  .cn-roles-panel,
-  .cn-features-panel,
-  .cn-onboard-panel,
-  .cn-faq-panel,
-  .cn-garden-copy { padding: 22px 18px; }
-
-  .cn-grid,
-  .cn-aud-grid,
-  .cn-gate-grid,
-  .cn-play-grid,
-  .cn-features-grid,
-  .cn-onboard-grid { gap: 14px; }
-
-  /* Audience cards: the tall ones. The screenshot well loses a quarter of its
-     height and the mock inside it narrows to match — it is a garnish on a card
-     whose point is the list above it, not a device shot to be read. */
+  .cn-brand img { height: 22px; }
+  .cn-hero h1 { font-size: clamp(34px, 10vw, 46px); }
+  .cn-hero-actions .cn-btn { width: 100%; }
+  .cn-mock { width: 100%; }
+  .cn-problem-card,
+  .cn-feature,
+  .cn-onboard-card,
+  .cn-play-grid > div { padding: 20px 18px; }
   .cn-aud { padding: 20px 18px 0; }
-  .cn-aud h3 { font-size: 21px; margin-bottom: 12px; }
-  .cn-aud ul { font-size: 14px; gap: 8px; margin-bottom: 18px; }
-  .cn-aud-shot { height: 150px; }
-  .cn-aud-shot img { width: 52%; }
-
-  .cn-problem-card { padding: 20px 18px 24px; }
-  .cn-problem-card .cn-num { font-size: 26px; margin-bottom: 8px; }
-  .cn-problem-card h3 { font-size: 17px; }
-  .cn-problem-card p { font-size: 14.3px; line-height: 1.55; }
-
-  .cn-gate-step { padding: 20px 18px; }
-  .cn-gate-step .cn-num { font-size: 30px; margin-bottom: 10px; }
-  .cn-gate-step h3 { font-size: 18px; }
-  .cn-gate-step p { font-size: 14.3px; line-height: 1.55; }
-  .cn-gate-lede { font-size: 16px; margin-bottom: 26px; }
-
-  .cn-play-grid h3 { font-size: 17px; }
-  .cn-play-grid p { font-size: 14.3px; line-height: 1.55; }
-
-  .cn-feature { padding: 18px 18px 22px; }
-  .cn-feature h3 { font-size: 16px; }
-  .cn-feature p { font-size: 14px; line-height: 1.5; }
-
-  .cn-onboard-card { padding: 20px 18px 24px; }
-  .cn-onboard-card .cn-num { font-size: 24px; margin-bottom: 8px; }
-  .cn-onboard-card h3 { font-size: 16px; }
-  .cn-onboard-card p { font-size: 14px; line-height: 1.5; }
-  .cn-onboard-lede { font-size: 15.5px; margin-bottom: 26px; }
-
-  /* The filmstrip is swiped, so its cards are sized to how many of the next
-     one you can see — a narrower card leaves the edge of the following one in
-     frame, which is what says "this scrolls". */
-  .cn-rail { gap: 16px; padding: 0 20px; }
-  .cn-rail-item { width: 234px; padding: 12px 12px 16px; }
-  .cn-rail-shot { height: 262px; border-radius: 16px; }
-  .cn-rail-cap { margin-top: 12px; font-size: 13.5px; }
-
-  .cn-faq-item summary { font-size: 16.5px; padding: 18px 0; }
-  .cn-faq-item p { font-size: 14.5px; line-height: 1.6; margin-bottom: 20px; }
-
-  /* Panel headings track the cards down a step; a 30px heading over an 18px
-     card title is a desktop ratio held at phone width. */
-  .cn-aud-intro h2,
-  .cn-gate-panel h2,
-  .cn-play-panel h2,
-  .cn-roles-panel h2,
-  .cn-features-panel h2,
-  .cn-onboard-panel h2,
-  .cn-faq-panel h2,
-  .cn-garden-copy h2 { font-size: 26px; margin-bottom: 12px; }
-  .cn-features-panel h2,
-  .cn-play-panel h2 { margin-bottom: 22px; }
-  .cn-roles-lede { font-size: 15.5px; margin-bottom: 24px; }
-  /* The standfirst under each heading, same step down as everything else. */
-  .cn-aud-intro p,
-  .cn-garden-copy p { font-size: 15.5px; }
-
-  /* The permissions grid is five columns wide and the phone shows two, so it
-     was cutting "expenses, funds" in half with nothing to say the rest was
-     there. Holding the office column still gives every scrolled column
-     something to be read against, and the shadow on the right edge is the
-     only honest signal that the table continues. */
-  .cn-roles-scroll {
-    background:
-      radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, #201e1d 20%, transparent), transparent)
-        right center / 18px 100% no-repeat,
-      color-mix(in srgb, #ffffff 40%, transparent);
-  }
-  .cn-roles-table { font-size: 13.5px; min-width: 560px; }
+  .cn-aud-shot { height: 140px; }
+  .cn-garden-shots .cn-shot { max-width: 132px; }
+  .cn-rail { gap: 12px; padding: 0 18px 18px; }
+  .cn-rail-item { width: 208px; }
+  .cn-rail-shot { height: 232px; }
+  .cn-faq-item summary { font-size: 16px; padding: 18px 0; }
+  .cn-roles-table { font-size: 13.5px; min-width: 580px; }
   .cn-roles-table th,
-  .cn-roles-table td { padding: 14px 10px; }
+  .cn-roles-table td { padding: 13px 11px; }
   .cn-roles-table th:first-child,
-  .cn-roles-table td:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 1;
-    padding-left: 14px;
-    padding-right: 14px;
-    background: #fbf6ec;
+  .cn-roles-table td:first-child { position: sticky; left: 0; z-index: 1; background: #fff; }
+  .cn-roles-table th:first-child { background: var(--paper-warm); }
+}
+
+/* Ambient loops go first: they run forever, so they are the ones most worth
+   silencing for someone who asked for less movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

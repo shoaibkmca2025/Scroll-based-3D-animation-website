@@ -2,7 +2,7 @@ import { faqs } from '../data.js';
 
 export default function Faq() {
   return (
-    <section data-cam="hall" className="cn-sec cn-faq cn-side cn-side--left" data-side="left">
+    <section data-ground="paper" className="cn-sec cn-faq">
       <div className="cn-faq-panel cn-surface cn-surface--cream">
         <h2 data-reveal="1">Questions committees ask.</h2>
         {faqs.map((f) => (

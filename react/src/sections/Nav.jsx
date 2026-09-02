@@ -3,8 +3,7 @@ export default function Nav() {
     <nav className="cn-nav">
       <div className="cn-progress" data-progress-bar="1" />
       <a href="#top" className="cn-brand">
-        <span className="cn-brand-mark" />
-        Grihive
+        <img src="logo.webp" alt="Grihive" width="128" height="26" />
       </a>
       <div className="cn-nav-links">
         <a href="#gate">The gate</a>

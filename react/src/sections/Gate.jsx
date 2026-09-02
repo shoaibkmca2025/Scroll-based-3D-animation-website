@@ -2,8 +2,12 @@ import { gateNotes, gateSteps } from '../data.js';
 
 export default function Gate() {
   return (
-    <section id="gate" data-cam="gate" className="cn-sec cn-side cn-side--left" data-side="left">
-      <div className="cn-gate-panel">
+    <section data-ground="dark" id="gate" className="cn-sec cn-pin" data-pin>
+      <span className="cn-orb cn-orb--a" aria-hidden="true" />
+      <span className="cn-orb cn-orb--b" aria-hidden="true" />
+      <div className="cn-pin-track">
+        <div className="cn-pin-stage">
+          <div className="cn-gate-panel">
         <div data-reveal="1" className="cn-kicker cn-kicker--onink">
           The strongest part
         </div>
@@ -14,7 +18,7 @@ export default function Gate() {
         </p>
         <div className="cn-grid cn-gate-grid">
           {gateSteps.map((s) => (
-            <div key={s.n} data-reveal="1" className="cn-gate-step">
+            <div key={s.n} data-pin-step className="cn-gate-step">
               <div className="cn-num">{s.n}</div>
               <h3>{s.title}</h3>
               <p>{s.body}</p>
@@ -28,6 +32,8 @@ export default function Gate() {
               {n.body}
             </div>
           ))}
+        </div>
+      </div>
         </div>
       </div>
     </section>

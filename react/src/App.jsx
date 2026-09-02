@@ -1,6 +1,7 @@
-import Society3D from './components/Society3D.jsx';
-import useScrollFx from './hooks/useScrollFx.js';
 import useSmoothScroll from './hooks/useSmoothScroll.js';
+import useScrollFx from './hooks/useScrollFx.js';
+import useMotion from './hooks/useMotion.js';
+import Ticker from './components/Ticker.jsx';
 import Nav from './sections/Nav.jsx';
 import Hero from './sections/Hero.jsx';
 import Problem from './sections/Problem.jsx';
@@ -18,16 +19,13 @@ import Cta from './sections/Cta.jsx';
 export default function App() {
   useSmoothScroll();
   useScrollFx();
+  useMotion();
 
   return (
     <div className="cn-page">
-      <div className="cn-stage">
-        <Society3D />
-        <div className="cn-scrim" />
-      </div>
-
       <Nav />
       <Hero />
+      <Ticker />
       <Problem />
       <Gate />
       <Audiences />
@@ -36,6 +34,7 @@ export default function App() {
       <Roles />
       <Screens />
       <Features />
+      <Ticker />
       <Onboarding />
       <Faq />
       <Cta />

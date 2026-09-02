@@ -2,7 +2,7 @@ import { everyday } from '../data.js';
 
 export default function Play() {
   return (
-    <section data-cam="play" className="cn-sec cn-side cn-side--right" data-side="right">
+    <section data-ground="warm" className="cn-sec">
       <div className="cn-play-panel cn-surface cn-surface--ink">
         <div data-reveal="1" className="cn-kicker cn-kicker--light cn-mb16">
           Everyday life

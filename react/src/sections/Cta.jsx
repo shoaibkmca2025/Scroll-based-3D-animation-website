@@ -5,7 +5,9 @@ export default function Cta() {
   const [submitted, setSubmitted] = useState(false);
 
   return (
-    <section id="demo" data-cam="dusk" className="cn-sec cn-cta cn-side cn-side--right" data-side="right">
+    <section data-ground="dark" id="demo" className="cn-sec cn-cta">
+      <span className="cn-orb cn-orb--a" aria-hidden="true" />
+      <span className="cn-orb cn-orb--b" aria-hidden="true" />
       <div className="cn-cta-panel">
         <div>
           <h2>Get your society onboarded.</h2>
