@@ -68,8 +68,8 @@ export const audiences = [
       'Dues, receipts and community fund drives',
       'Amenity booking, complaints, notices and RSVPs'
     ],
-    img: 'screens/11-amenities.png',
-    alt: 'Amenities screen'
+    img: 'shots/home',
+    alt: 'Resident home screen'
   },
   {
     variant: 'com',
@@ -82,8 +82,8 @@ export const audiences = [
       "Record expenses and the society's UPI details",
       'Register guards, approve staff, issue gate passes'
     ],
-    img: 'screens/14-committee-roles.png',
-    alt: 'Committee roles screen'
+    img: 'shots/maintenance',
+    alt: 'Maintenance controls for the committee'
   },
   {
     variant: 'sec',
@@ -96,8 +96,8 @@ export const audiences = [
       'Respond to SOS alerts from residents',
       'Mark their own attendance — which is how the app knows who is on duty'
     ],
-    img: 'screens/13-parking.png',
-    alt: 'Parking hub screen'
+    img: 'shots/members',
+    alt: 'Society members and approvals'
   },
   {
     variant: 'stf',
@@ -110,8 +110,8 @@ export const audiences = [
       'One scan at the gate records entry, exit and attendance',
       'Nothing for them to install, and no app to learn'
     ],
-    img: 'screens/15-staff-approvals.png',
-    alt: 'Staff approvals screen'
+    img: 'shots/search',
+    alt: 'Staff and member lookup'
   }
 ];
 
@@ -154,39 +154,29 @@ export const roleRows = [
 
 export const railScreens = [
   {
-    img: 'screens/16-maintenance-hub.png',
+    img: 'shots/home',
+    title: 'Home',
+    body: 'Urgent notices, the committee tools, and everything a resident reaches for.'
+  },
+  {
+    img: 'shots/maintenance',
     title: 'Maintenance Hub',
-    body: 'Who has paid, who has not, and what has been collected.'
+    body: 'What is owed this month, who has paid, and what has been collected.'
   },
   {
-    img: 'screens/10-finance.png',
-    title: 'Finance',
-    body: 'Your dues, the society balance and every recent movement.'
+    img: 'shots/finance',
+    title: 'Payment History',
+    body: 'Every month against its receipt, paid and unpaid side by side.'
   },
   {
-    img: 'screens/12-members.png',
+    img: 'shots/members',
     title: 'Society Members',
-    body: 'Neighbours by wing and flat, committee offices marked.'
+    body: 'Neighbours by wing and flat, with pending approvals up top.'
   },
   {
-    img: 'screens/09-events.png',
-    title: 'Events',
-    body: 'Notices, RSVPs and paid events in one place.'
-  },
-  {
-    img: 'screens/15-staff-approvals.png',
-    title: 'Staff Approvals',
-    body: 'Household help waiting on the secretary and their gate pass.'
-  },
-  {
-    img: 'screens/13-parking.png',
-    title: 'Parking & Vehicles',
-    body: 'The slot map, your allotment, and whose car that is.'
-  },
-  {
-    img: 'screens/14-committee-roles.png',
-    title: 'Committee Roles',
-    body: 'Who holds which office, and what that office carries.'
+    img: 'shots/search',
+    title: 'Member Lookup',
+    body: 'Find anyone by name or unit without leaving the directory.'
   }
 ];
 
