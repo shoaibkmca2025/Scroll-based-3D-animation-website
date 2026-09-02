@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="description" content="Grihive — residential society management. The gate, the books and the noticeboard in one place, for Indian housing societies." />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="./image-slot.js"></script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #F4F1EA; color: #14170F; -webkit-font-smoothing: antialiased; font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  a { color: #1C3326; text-decoration: none; }
+  a:hover { color: #B77A2B; }
+  summary::-webkit-details-marker { display: none; }
+  ::selection { background: #E7C892; }
+  @keyframes rise { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+  @keyframes riseSm { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes wipeX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes lift { from { transform: translateY(50px) rotate(1.5deg); } to { transform: translateY(-50px) rotate(-1deg); } }
+  @keyframes sink { from { transform: translateY(-26px); } to { transform: translateY(26px); } }
+  @keyframes scan { 0% { top: 6%; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { top: 92%; opacity: 0; } }
+  @keyframes pulseRing { 0% { transform: scale(.7); opacity: .7; } 100% { transform: scale(1.9); opacity: 0; } }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+  @keyframes bobY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
+</style>
+</helmet>
+
+<div style="position:relative;overflow-x:clip">
+
+<div style="position:fixed;top:0;left:0;right:0;height:3px;background:#B77A2B;transform-origin:0 50%;z-index:60;animation:wipeX linear both;animation-timeline:scroll(root)"></div>
+
+<header style="position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);background:rgba(244,241,234,.85);border-bottom:1px solid #E2DCCD">
+  <nav style="max-width:1240px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
+    <a href="#top" style="display:flex;align-items:center;gap:10px;margin-right:auto">
+      <span style="width:26px;height:26px;border-radius:8px;background:#1C3326;display:grid;place-items:center;color:#E7C892;font:500 13px/1 'JetBrains Mono',monospace">G</span>
+      <span style="font:400 23px/1 'Instrument Serif',serif;letter-spacing:-.01em">Grihive</span>
+    </a>
+    <div style="display:flex;align-items:center;gap:26px;font:500 14px/1 'Instrument Sans',sans-serif;color:#4C5148">
+      <a href="#gate" style="color:inherit" style-hover="color:#B77A2B">The gate</a>
+      <a href="#roles" style="color:inherit" style-hover="color:#B77A2B">Roles</a>
+      <a href="#features" style="color:inherit" style-hover="color:#B77A2B">Features</a>
+    </div>
+    <a href="#demo" style="font:500 14px/1 'Instrument Sans',sans-serif;color:#F4F1EA;background:#1C3326;padding:11px 18px;border-radius:999px;transition:background .25s,transform .25s" style-hover="background:#B77A2B;color:#14170F;transform:translateY(-1px)">Book a demo</a>
+  </nav>
+</header>
+
+<section id="top" data-screen-label="Hero" style="padding:clamp(52px,7vw,100px) 24px clamp(36px,5vw,64px)">
+  <div style="max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:clamp(32px,5vw,72px);align-items:center">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:9px;border:1px solid #D6CFBC;border-radius:999px;padding:8px 15px 8px 12px;background:#FBF9F4;animation:riseSm .7s ease both;flex-wrap:nowrap;max-width:100%">
+        <span style="width:7px;height:7px;border-radius:50%;background:#B77A2B;animation:blink 2.4s ease-in-out infinite"></span>
+        <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#5C6157;white-space:nowrap;line-height:1.3">For Indian housing societies</span>
+      </div>
+      <h1 style="margin:22px 0 0;font:400 clamp(42px,6.4vw,86px)/1.02 'Instrument Serif',serif;letter-spacing:-.02em;text-wrap:balance">
+        <span style="display:inline-block;animation:rise .9s ease both;animation-delay:.06s">Everything</span>
+        <span style="display:inline-block;animation:rise .9s ease both;animation-delay:.14s">your</span>
+        <span style="display:inline-block;animation:rise .9s ease both;animation-delay:.22s">society</span>
+        <span style="display:inline-block;animation:rise .9s ease both;animation-delay:.3s">runs</span>
+        <span style="display:inline-block;animation:rise .9s ease both;animation-delay:.38s">on,</span>
+        <span style="display:inline-block;font-style:italic;color:#1C3326;animation:rise .9s ease both;animation-delay:.46s">in one place.</span>
+      </h1>
+      <p style="margin:26px 0 0;max-width:56ch;font:400 clamp(17px,1.35vw,20px)/1.62 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty;animation:rise .9s ease both;animation-delay:.56s">The gate, the books and the noticeboard — replacing the WhatsApp groups, paper visitor registers and phone-call reminders your committee runs on today.</p>
+      <div style="margin-top:34px;display:flex;flex-wrap:wrap;gap:12px;animation:rise .9s ease both;animation-delay:.66s">
+        <a href="#demo" style="font:500 15px/1 'Instrument Sans',sans-serif;color:#F4F1EA;background:#1C3326;padding:16px 26px;border-radius:999px;transition:background .25s,transform .25s" style-hover="background:#B77A2B;color:#14170F;transform:translateY(-2px)">Get your society onboarded</a>
+        <a href="#gate" style="font:500 15px/1 'Instrument Sans',sans-serif;color:#1C3326;border:1px solid #CFC7B2;padding:16px 26px;border-radius:999px;transition:border-color .25s,background .25s" style-hover="border-color:#1C3326;background:#EDE8DB">See how the gate works</a>
+      </div>
+    </div>
+
+    <div style="position:relative;min-height:clamp(360px,42vw,520px);display:flex;flex-direction:column;justify-content:center;animation:fade 1.1s ease both;animation-delay:.3s">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(90%,420px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#E7C89255,transparent 68%)"></div>
+      <div style="position:relative;z-index:2;order:2;margin:-18px -2% 0 auto;width:min(64%,214px);background:#FBF9F4;border:1px solid #E2DCCD;border-radius:20px;padding:14px 16px;box-shadow:0 22px 50px -28px rgba(20,23,15,.4);animation:sink linear both;animation-timeline:view();animation-range:cover 0% cover 100%">
+        <div style="font:500 11px/1 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8A8578">Staff attendance</div>
+        <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span style="font:400 18px/1.2 'Instrument Serif',serif;white-space:nowrap">Sunita — cook</span>
+          <span style="font:500 10px/1 'Instrument Sans',sans-serif;color:#1C3326;background:#DCE7DD;padding:6px 8px;border-radius:6px;white-space:nowrap">PRESENT</span>
+        </div>
+        <div style="margin-top:10px;font:400 12px/1 'JetBrains Mono',monospace;color:#8A8578">IN 09:04 · OUT 13:20</div>
+      </div>
+      <div style="position:relative;z-index:1;order:1;width:min(74%,280px);margin:0 auto 0 0;background:#14170F;border-radius:26px;padding:22px;box-shadow:0 40px 80px -40px rgba(20,23,15,.7);animation:lift linear both;animation-timeline:view();animation-range:cover 0% cover 100%">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font:500 11px/1 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8A8578">Visitor pass</span>
+          <span style="font:400 11px/1 'JetBrains Mono',monospace;color:#E7C892">B-1204</span>
+        </div>
+        <div style="margin-top:16px;position:relative;background:#F4F1EA;border-radius:14px;padding:18px;display:grid;place-items:center;overflow:hidden">
+          <div style="width:min(100%,140px);aspect-ratio:1;background:#14170F;background-image:repeating-linear-gradient(90deg,#F4F1EA 0 7px,transparent 7px 14px),repeating-linear-gradient(0deg,#F4F1EA 0 7px,transparent 7px 14px);background-blend-mode:screen;border-radius:4px;position:relative">
+            <div style="position:absolute;top:6px;left:6px;width:30px;height:30px;border:6px solid #14170F;background:#F4F1EA;box-shadow:inset 0 0 0 3px #F4F1EA"></div>
+            <div style="position:absolute;top:6px;right:6px;width:30px;height:30px;border:6px solid #14170F;background:#F4F1EA;box-shadow:inset 0 0 0 3px #F4F1EA"></div>
+            <div style="position:absolute;bottom:6px;left:6px;width:30px;height:30px;border:6px solid #14170F;background:#F4F1EA;box-shadow:inset 0 0 0 3px #F4F1EA"></div>
+          </div>
+          <div style="position:absolute;left:8%;right:8%;height:2px;background:linear-gradient(90deg,transparent,#B77A2B,transparent);animation:scan 3.4s cubic-bezier(.5,0,.5,1) infinite"></div>
+        </div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:10px">
+          <span style="position:relative;width:9px;height:9px;border-radius:50%;background:#B77A2B;display:inline-grid;place-items:center">
+            <span style="position:absolute;inset:-4px;border-radius:50%;border:1px solid #B77A2B;animation:pulseRing 2s ease-out infinite"></span>
+          </span>
+          <span style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#CFC7B2">ENTRY LOGGED · 19:42</span>
+        </div>
+        <div style="margin-top:14px;font:400 13px/1.5 'Instrument Sans',sans-serif;color:#8A8578">Expires today, 22:00 · shared on WhatsApp</div>
+      </div>
+    </div>
+  </div>
+  <div style="max-width:1240px;margin:clamp(40px,6vw,80px) auto 0;display:flex;align-items:center;gap:12px;color:#8A8578">
+    <span style="font:500 11px/1 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase">Scroll to see how it works</span>
+    <span style="width:1px;height:34px;background:linear-gradient(#8A8578,transparent);animation:bobY 2.6s ease-in-out infinite"></span>
+  </div>
+</section>
+
+<section data-screen-label="Problem" style="padding:clamp(72px,9vw,140px) 24px;border-top:1px solid #E2DCCD">
+  <div style="max-width:1240px;margin:0 auto">
+    <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8A8578">What it replaces</span>
+    <h2 style="margin:18px 0 0;max-width:22ch;font:400 clamp(30px,4.2vw,54px)/1.08 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 62%">Most societies are still run out of a group chat and a register at the gate.</h2>
+    <div style="margin-top:clamp(40px,5vw,72px);display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:1px;background:#E2DCCD;border-top:1px solid #E2DCCD;border-bottom:1px solid #E2DCCD">
+      <div style="background:#F4F1EA;padding:28px 24px 32px;transition:background .3s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 55%" style-hover="background:#EDE8DB">
+        <span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B77A2B">01</span>
+        <h3 style="margin:16px 0 8px;font:500 18px/1.3 'Instrument Sans',sans-serif">Notices scroll away</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty">A group chat where the AGM notice sits under forty forwards by evening.</p>
+      </div>
+      <div style="background:#F4F1EA;padding:28px 24px 32px;transition:background .3s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 55%" style-hover="background:#EDE8DB">
+        <span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B77A2B">02</span>
+        <h3 style="margin:16px 0 8px;font:500 18px/1.3 'Instrument Sans',sans-serif">A register nobody can read</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty">Visitor names written by hand at the gate, unsearchable the moment they are needed.</p>
+      </div>
+      <div style="background:#F4F1EA;padding:28px 24px 32px;transition:background .3s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 55%" style-hover="background:#EDE8DB">
+        <span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B77A2B">03</span>
+        <h3 style="margin:16px 0 8px;font:500 18px/1.3 'Instrument Sans',sans-serif">Maintenance chased by phone</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty">The treasurer calling flat by flat, keeping the tally in a personal notebook.</p>
+      </div>
+      <div style="background:#F4F1EA;padding:28px 24px 32px;transition:background .3s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 55%" style-hover="background:#EDE8DB">
+        <span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B77A2B">04</span>
+        <h3 style="margin:16px 0 8px;font:500 18px/1.3 'Instrument Sans',sans-serif">No record of who came in</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty">When it matters there is no entry log — and no attendance record for household staff.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gate" data-screen-label="The gate" style="background:#14170F;color:#F4F1EA;padding:clamp(80px,10vw,160px) 24px;position:relative;overflow:hidden">
+  <div style="position:absolute;top:-20%;right:-10%;width:min(60vw,640px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#B77A2B22,transparent 66%)"></div>
+  <div style="max-width:1240px;margin:0 auto;position:relative">
+    <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#B77A2B">The strongest part</span>
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(24px,4vw,64px);align-items:end">
+      <h2 style="margin:0;font:400 clamp(34px,5.4vw,72px)/1.02 'Instrument Serif',serif;letter-spacing:-.02em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">The gate <span style="font-style:italic;color:#E7C892">actually</span> works.</h2>
+      <p style="margin:0;font:400 clamp(16px,1.25vw,19px)/1.65 'Instrument Sans',sans-serif;color:#B9B3A4;text-wrap:pretty;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">Most competitors stop at a visitor log the guard types in. Here the pass is scanned — and the entry log and staff attendance fall out of it.</p>
+    </div>
+    <div style="margin-top:clamp(48px,6vw,96px)">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(16px,3vw,48px);padding:32px 0;border-top:1px solid #2C3128;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 50%">
+        <div style="display:flex;align-items:baseline;gap:16px">
+          <span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B77A2B">01</span>
+          <h3 style="margin:0;font:400 clamp(22px,2.4vw,32px)/1.15 'Instrument Serif',serif">Resident generates a pass</h3>
+        </div>
+        <p style="margin:0;max-width:64ch;font:400 16px/1.65 'Instrument Sans',sans-serif;color:#B9B3A4;text-wrap:pretty">A QR for the guest, with an expiry. Household staff get a monthly one instead.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(16px,3vw,48px);padding:32px 0;border-top:1px solid #2C3128;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 50%">
+        <div style="display:flex;align-items:baseline;gap:16px">
+          <span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B77A2B">02</span>
+          <h3 style="margin:0;font:400 clamp(22px,2.4vw,32px)/1.15 'Instrument Serif',serif">Shares it on WhatsApp</h3>
+        </div>
+        <p style="margin:0;max-width:64ch;font:400 16px/1.65 'Instrument Sans',sans-serif;color:#B9B3A4;text-wrap:pretty">The guest needs nothing installed. The pass arrives where they already are.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(16px,3vw,48px);padding:32px 0;border-top:1px solid #2C3128;border-bottom:1px solid #2C3128;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 50%">
+        <div style="display:flex;align-items:baseline;gap:16px">
+          <span style="font:400 13px/1 'JetBrains Mono',monospace;color:#B77A2B">03</span>
+          <h3 style="margin:0;font:400 clamp(22px,2.4vw,32px)/1.15 'Instrument Serif',serif">The guard scans, it is logged</h3>
+        </div>
+        <p style="margin:0;max-width:64ch;font:400 16px/1.65 'Instrument Sans',sans-serif;color:#B9B3A4;text-wrap:pretty">Entry and exit recorded. For staff, the same scan doubles as the day's attendance.</p>
+      </div>
+    </div>
+    <div style="margin-top:clamp(40px,5vw,72px);display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
+      <div style="border:1px solid #2C3128;border-radius:16px;padding:24px;background:#1A1E15;transition:border-color .3s,transform .3s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="border-color:#B77A2B;transform:translateY(-4px)">
+        <h4 style="margin:0 0 8px;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#E7C892">WhatsApp OTP, not SMS</h4>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#B9B3A4">Verification arrives where Indian users already are — no SMS deliverability problems.</p>
+      </div>
+      <div style="border:1px solid #2C3128;border-radius:16px;padding:24px;background:#1A1E15;transition:border-color .3s,transform .3s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="border-color:#B77A2B;transform:translateY(-4px)">
+        <h4 style="margin:0 0 8px;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#E7C892">Call Security Desk</h4>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#B9B3A4">Rings whoever is actually on duty, resolved from that guard's attendance — not a number printed in the app.</p>
+      </div>
+      <div style="border:1px solid #2C3128;border-radius:16px;padding:24px;background:#1A1E15;transition:border-color .3s,transform .3s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="border-color:#B77A2B;transform:translateY(-4px)">
+        <h4 style="margin:0 0 8px;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#E7C892">SOS to the gate</h4>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#B9B3A4">A panic button that raises an alert on the guard's screen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Audiences" style="padding:clamp(72px,9vw,140px) 24px">
+  <div style="max-width:1240px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(24px,4vw,64px);align-items:end">
+      <h2 style="margin:0;font:400 clamp(32px,4.6vw,58px)/1.05 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">Four people, <span style="font-style:italic;color:#1C3326">one backend.</span></h2>
+      <p style="margin:0;font:400 16px/1.65 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">Residents and guards share an app and see different screens. The committee gets its authority inside the same app. Household staff carry a monthly pass instead — the same scan that lets them in marks their attendance.</p>
+    </div>
+    <div style="margin-top:clamp(40px,5vw,72px);display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:16px">
+      <div style="background:#FBF9F4;border:1px solid #E2DCCD;border-radius:20px;padding:28px;transition:transform .35s,box-shadow .35s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%" style-hover="transform:translateY(-6px);box-shadow:0 26px 50px -32px rgba(20,23,15,.45)">
+        <div style="font:500 11px/1 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#B77A2B">Residents</div>
+        <h3 style="margin:12px 0 20px;font:400 26px/1.15 'Instrument Serif',serif">Owners &amp; tenants</h3>
+        <ul style="margin:0;padding:0;list-style:none;display:grid;gap:12px;font:400 15px/1.55 'Instrument Sans',sans-serif;color:#5C6157">
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Visitor gate passes with a QR the guard scans</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Register household staff for a monthly pass</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Dues, receipts and community fund drives</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Amenity booking, complaints, notices and RSVPs</span></li>
+        </ul>
+      </div>
+      <div style="background:#FBF9F4;border:1px solid #E2DCCD;border-radius:20px;padding:28px;transition:transform .35s,box-shadow .35s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%" style-hover="transform:translateY(-6px);box-shadow:0 26px 50px -32px rgba(20,23,15,.45)">
+        <div style="font:500 11px/1 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#B77A2B">Committee</div>
+        <h3 style="margin:12px 0 20px;font:400 26px/1.15 'Instrument Serif',serif">Secretary, chairman, treasurer</h3>
+        <ul style="margin:0;padding:0;list-style:none;display:grid;gap:12px;font:400 15px/1.55 'Instrument Sans',sans-serif;color:#5C6157">
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Approve registrations and profile changes</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Set the maintenance amount, date and reminders</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Record expenses and the society's UPI details</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Register guards, approve staff, issue gate passes</span></li>
+        </ul>
+      </div>
+      <div style="background:#FBF9F4;border:1px solid #E2DCCD;border-radius:20px;padding:28px;transition:transform .35s,box-shadow .35s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%" style-hover="transform:translateY(-6px);box-shadow:0 26px 50px -32px rgba(20,23,15,.45)">
+        <div style="font:500 11px/1 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#B77A2B">Security</div>
+        <h3 style="margin:12px 0 20px;font:400 26px/1.15 'Instrument Serif',serif">The guard at the gate</h3>
+        <ul style="margin:0;padding:0;list-style:none;display:grid;gap:12px;font:400 15px/1.55 'Instrument Sans',sans-serif;color:#5C6157">
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Scan visitor and staff passes to log entry and exit</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>See who is expected today</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Respond to SOS alerts from residents</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#CFC7B2;margin-top:8px"></span><span>Mark their own attendance — which is how the app knows who is on duty</span></li>
+        </ul>
+      </div>
+      <div style="background:#1C3326;border-radius:20px;padding:28px;transition:transform .35s,box-shadow .35s;animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%" style-hover="transform:translateY(-6px);box-shadow:0 26px 50px -32px rgba(20,23,15,.45)">
+        <div style="font:500 11px/1 'Instrument Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#E7C892">Household staff</div>
+        <h3 style="margin:12px 0 20px;font:400 26px/1.15 'Instrument Serif',serif;color:#F4F1EA">Maids, cooks and drivers</h3>
+        <ul style="margin:0;padding:0;list-style:none;display:grid;gap:12px;font:400 15px/1.55 'Instrument Sans',sans-serif;color:#B9C4B7">
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#B77A2B;margin-top:8px"></span><span>A monthly pass instead of a signature at every visit</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#B77A2B;margin-top:8px"></span><span>Registered by the household, approved by the secretary</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#B77A2B;margin-top:8px"></span><span>One scan at the gate records entry, exit and attendance</span></li>
+          <li style="display:grid;grid-template-columns:12px 1fr;gap:10px"><span style="width:5px;height:5px;border-radius:50%;background:#B77A2B;margin-top:8px"></span><span>Nothing for them to install, and no app to learn</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Amenities" style="padding:clamp(72px,9vw,140px) 0;background:#EDE8DB;border-top:1px solid #E2DCCD;border-bottom:1px solid #E2DCCD;overflow:hidden">
+  <div style="max-width:1240px;margin:0 auto;padding:0 24px">
+    <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8A8578">Shared spaces</span>
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(24px,4vw,64px);align-items:end">
+      <h2 style="margin:0;font:400 clamp(30px,4.4vw,56px)/1.05 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">The clubhouse, the garden, the gym — <span style="font-style:italic">booked, not argued over.</span></h2>
+      <p style="margin:0;font:400 16px/1.65 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">Amenity booking with conflict detection, and approval where the committee wants it. Events and notices sit alongside, with RSVPs and paid events handled in the same place.</p>
+    </div>
+  </div>
+  <div style="margin-top:clamp(36px,4vw,64px);display:flex;width:max-content;gap:14px;animation:marquee 28s linear infinite">
+    <div style="display:flex;gap:14px;padding-right:14px">
+      <span style="font:400 clamp(22px,2.6vw,34px)/1 'Instrument Serif',serif;border:1px solid #CFC7B2;border-radius:999px;padding:16px 30px;background:#F4F1EA">Clubhouse</span>
+      <span style="font:400 clamp(22px,2.6vw,34px)/1 'Instrument Serif',serif;border:1px solid #CFC7B2;border-radius:999px;padding:16px 30px;background:#F4F1EA;font-style:italic;color:#1C3326">Garden</span>
+      <span style="font:400 clamp(22px,2.6vw,34px)/1 'Instrument Serif',serif;border:1px solid #CFC7B2;border-radius:999px;padding:16px 30px;background:#F4F1EA">Gymnasium</span>
+      <span style="font:400 clamp(22px,2.6vw,34px)/1 'Instrument Serif',serif;border-radius:999px;padding:16px 30px;background:#1C3326;color:#E7C892">Swimming pool</span>
+    </div>
+    <div style="display:flex;gap:14px;padding-right:14px">
+      <span style="font:400 clamp(22px,2.6vw,34px)/1 'Instrument Serif',serif;border:1px solid #CFC7B2;border-radius:999px;padding:16px 30px;background:#F4F1EA">Clubhouse</span>
+      <span style="font:400 clamp(22px,2.6vw,34px)/1 'Instrument Serif',serif;border:1px solid #CFC7B2;border-radius:999px;padding:16px 30px;background:#F4F1EA;font-style:italic;color:#1C3326">Garden</span>
+      <span style="font:400 clamp(22px,2.6vw,34px)/1 'Instrument Serif',serif;border:1px solid #CFC7B2;border-radius:999px;padding:16px 30px;background:#F4F1EA">Gymnasium</span>
+      <span style="font:400 clamp(22px,2.6vw,34px)/1 'Instrument Serif',serif;border-radius:999px;padding:16px 30px;background:#1C3326;color:#E7C892">Swimming pool</span>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Everyday life" style="padding:clamp(72px,9vw,140px) 24px">
+  <div style="max-width:1240px;margin:0 auto">
+    <h2 style="margin:0;max-width:24ch;font:400 clamp(30px,4.4vw,56px)/1.05 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">The small things a society argues about, <span style="font-style:italic;color:#1C3326">written down.</span></h2>
+    <div style="margin-top:clamp(40px,5vw,72px);display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(24px,3vw,40px)">
+      <div style="animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%">
+        <div style="height:2px;background:#1C3326;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 55%"></div>
+        <h3 style="margin:18px 0 8px;font:500 17px/1.3 'Instrument Sans',sans-serif">Parking, mapped</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty">The slot map, occupied against free, your allotted slot, and a lookup for whose car that is.</p>
+      </div>
+      <div style="animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%">
+        <div style="height:2px;background:#1C3326;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 55%"></div>
+        <h3 style="margin:18px 0 8px;font:500 17px/1.3 'Instrument Sans',sans-serif">Complaints with a timeline</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty">Raised, seen, in progress, closed — so nobody has to ask what happened to it.</p>
+      </div>
+      <div style="animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%">
+        <div style="height:2px;background:#1C3326;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 55%"></div>
+        <h3 style="margin:18px 0 8px;font:500 17px/1.3 'Instrument Sans',sans-serif">Security status</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty">At Home, Away or Do Not Disturb, for a fixed duration, with a standing instruction for the guard. Auto-reverts when the time is up.</p>
+      </div>
+      <div style="animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%">
+        <div style="height:2px;background:#1C3326;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 55%"></div>
+        <h3 style="margin:18px 0 8px;font:500 17px/1.3 'Instrument Sans',sans-serif">Nearby services</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty">Local pharmacies, clinics and shops we onboard, surfaced to the societies near them. Tap to call.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="roles" data-screen-label="Roles" style="padding:clamp(72px,9vw,140px) 24px;background:#EDE8DB;border-top:1px solid #E2DCCD">
+  <div style="max-width:1240px;margin:0 auto">
+    <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8A8578">Separation of powers</span>
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(24px,4vw,64px);align-items:end">
+      <h2 style="margin:0;font:400 clamp(30px,4.4vw,56px)/1.05 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">Built for how committees <span style="font-style:italic;color:#1C3326">actually work.</span></h2>
+      <p style="margin:0;font:400 16px/1.65 'Instrument Sans',sans-serif;color:#5C6157;text-wrap:pretty;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">The treasurer cannot touch the gate. A committee member cannot touch the books. The secretary is the only office that can appoint others.</p>
+    </div>
+    <div style="margin-top:clamp(36px,4vw,64px);overflow-x:auto;border:1px solid #DCD6C8;border-radius:18px;background:#FBF9F4">
+      <div style="min-width:820px">
+        <div style="display:grid;grid-template-columns:1.2fr 1.5fr 1.5fr 1fr 1.1fr;background:#1C3326;color:#E7C892;font:500 11px/1.3 'Instrument Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase">
+          <div style="padding:16px 20px">Office</div>
+          <div style="padding:16px 20px">The books</div>
+          <div style="padding:16px 20px">Operations</div>
+          <div style="padding:16px 20px">Gate &amp; staff</div>
+          <div style="padding:16px 20px">Appoint others</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.2fr 1.5fr 1.5fr 1fr 1.1fr;border-top:1px solid #E7E2D4;font:400 15px/1.5 'Instrument Sans',sans-serif;color:#5C6157;transition:background .25s;animation:fade .8s ease both;animation-timeline:view();animation-range:entry 0% entry 45%" style-hover="background:#F1EDE1">
+          <div style="padding:18px 20px;font-weight:500;color:#14170F">Secretary</div>
+          <div style="padding:18px 20px;color:#1C3326;font-weight:500">Full</div>
+          <div style="padding:18px 20px;color:#1C3326;font-weight:500">Full</div>
+          <div style="padding:18px 20px;color:#1C3326;font-weight:500">Full</div>
+          <div style="padding:18px 20px;color:#B77A2B;font-weight:500">Only office that can</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.2fr 1.5fr 1.5fr 1fr 1.1fr;border-top:1px solid #E7E2D4;font:400 15px/1.5 'Instrument Sans',sans-serif;color:#5C6157;transition:background .25s;animation:fade .8s ease both;animation-timeline:view();animation-range:entry 0% entry 45%" style-hover="background:#F1EDE1">
+          <div style="padding:18px 20px;font-weight:500;color:#14170F">Chairman</div>
+          <div style="padding:18px 20px">Oversight</div>
+          <div style="padding:18px 20px">Oversight</div>
+          <div style="padding:18px 20px">Oversight</div>
+          <div style="padding:18px 20px;color:#A9A396">No</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.2fr 1.5fr 1.5fr 1fr 1.1fr;border-top:1px solid #E7E2D4;font:400 15px/1.5 'Instrument Sans',sans-serif;color:#5C6157;transition:background .25s;animation:fade .8s ease both;animation-timeline:view();animation-range:entry 0% entry 45%" style-hover="background:#F1EDE1">
+          <div style="padding:18px 20px;font-weight:500;color:#14170F">Treasurer</div>
+          <div style="padding:18px 20px">Maintenance, expenses, funds</div>
+          <div style="padding:18px 20px;color:#A9A396">No</div>
+          <div style="padding:18px 20px;color:#A9A396">No</div>
+          <div style="padding:18px 20px;color:#A9A396">No</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1.2fr 1.5fr 1.5fr 1fr 1.1fr;border-top:1px solid #E7E2D4;font:400 15px/1.5 'Instrument Sans',sans-serif;color:#5C6157;transition:background .25s;animation:fade .8s ease both;animation-timeline:view();animation-range:entry 0% entry 45%" style-hover="background:#F1EDE1">
+          <div style="padding:18px 20px;font-weight:500;color:#14170F">Committee member</div>
+          <div style="padding:18px 20px;color:#A9A396">No</div>
+          <div style="padding:18px 20px">Amenities, parking, complaints, events</div>
+          <div style="padding:18px 20px">Gate staff</div>
+          <div style="padding:18px 20px;color:#A9A396">No</div>
+        </div>
+      </div>
+    </div>
+    <p style="margin:18px 0 0;max-width:80ch;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#8A8578;text-wrap:pretty">Chairman, secretary and treasurer are single seats — appointing a new one steps the sitting holder down to resident, and the change applies immediately.</p>
+  </div>
+</section>
+
+<sc-if value="{{ showScreens }}" hint-placeholder-val="{{ true }}">
+<section data-screen-label="Screens" style="padding:clamp(72px,9vw,140px) 0;background:#14170F;color:#F4F1EA;overflow:hidden">
+  <div style="max-width:1240px;margin:0 auto;padding:0 24px">
+    <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#B77A2B">Inside the app</span>
+    <h2 style="margin:18px 0 0;max-width:20ch;font:400 clamp(30px,4.4vw,56px)/1.05 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">The screens your society will <span style="font-style:italic;color:#E7C892">live in.</span></h2>
+    <p style="margin:16px 0 0;font:400 13px/1.6 'JetBrains Mono',monospace;color:#6E7367">Drag your screenshots onto a frame to fill it →</p>
+  </div>
+  <div style="margin-top:clamp(32px,4vw,56px);display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x proximity;padding:8px 24px 28px">
+    <figure style="margin:0;flex:0 0 auto;width:262px;scroll-snap-align:center">
+      <div style="height:520px;border:1px solid #2C3128;border-radius:28px;padding:10px;background:#1A1E15">
+        <image-slot id="scr-maintenance" shape="rounded" radius="20" placeholder="Maintenance Hub screenshot" style="width:100%;height:100%"></image-slot>
+      </div>
+      <figcaption style="margin-top:16px"><span style="display:block;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#F4F1EA">Maintenance Hub</span><span style="display:block;margin-top:6px;font:400 14px/1.55 'Instrument Sans',sans-serif;color:#8A8578">Who has paid, who has not, and what has been collected.</span></figcaption>
+    </figure>
+    <figure style="margin:0;flex:0 0 auto;width:262px;scroll-snap-align:center">
+      <div style="height:520px;border:1px solid #2C3128;border-radius:28px;padding:10px;background:#1A1E15">
+        <image-slot id="scr-finance" shape="rounded" radius="20" placeholder="Finance screenshot" style="width:100%;height:100%"></image-slot>
+      </div>
+      <figcaption style="margin-top:16px"><span style="display:block;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#F4F1EA">Finance</span><span style="display:block;margin-top:6px;font:400 14px/1.55 'Instrument Sans',sans-serif;color:#8A8578">Your dues, the society balance and every recent movement.</span></figcaption>
+    </figure>
+    <figure style="margin:0;flex:0 0 auto;width:262px;scroll-snap-align:center">
+      <div style="height:520px;border:1px solid #2C3128;border-radius:28px;padding:10px;background:#1A1E15">
+        <image-slot id="scr-members" shape="rounded" radius="20" placeholder="Society Members screenshot" style="width:100%;height:100%"></image-slot>
+      </div>
+      <figcaption style="margin-top:16px"><span style="display:block;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#F4F1EA">Society Members</span><span style="display:block;margin-top:6px;font:400 14px/1.55 'Instrument Sans',sans-serif;color:#8A8578">Neighbours by wing and flat, committee offices marked.</span></figcaption>
+    </figure>
+    <figure style="margin:0;flex:0 0 auto;width:262px;scroll-snap-align:center">
+      <div style="height:520px;border:1px solid #2C3128;border-radius:28px;padding:10px;background:#1A1E15">
+        <image-slot id="scr-events" shape="rounded" radius="20" placeholder="Events screenshot" style="width:100%;height:100%"></image-slot>
+      </div>
+      <figcaption style="margin-top:16px"><span style="display:block;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#F4F1EA">Events</span><span style="display:block;margin-top:6px;font:400 14px/1.55 'Instrument Sans',sans-serif;color:#8A8578">Notices, RSVPs and paid events in one place.</span></figcaption>
+    </figure>
+    <figure style="margin:0;flex:0 0 auto;width:262px;scroll-snap-align:center">
+      <div style="height:520px;border:1px solid #2C3128;border-radius:28px;padding:10px;background:#1A1E15">
+        <image-slot id="scr-staff" shape="rounded" radius="20" placeholder="Staff Approvals screenshot" style="width:100%;height:100%"></image-slot>
+      </div>
+      <figcaption style="margin-top:16px"><span style="display:block;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#F4F1EA">Staff Approvals</span><span style="display:block;margin-top:6px;font:400 14px/1.55 'Instrument Sans',sans-serif;color:#8A8578">Household help waiting on the secretary and their gate pass.</span></figcaption>
+    </figure>
+    <figure style="margin:0;flex:0 0 auto;width:262px;scroll-snap-align:center">
+      <div style="height:520px;border:1px solid #2C3128;border-radius:28px;padding:10px;background:#1A1E15">
+        <image-slot id="scr-parking" shape="rounded" radius="20" placeholder="Parking screenshot" style="width:100%;height:100%"></image-slot>
+      </div>
+      <figcaption style="margin-top:16px"><span style="display:block;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#F4F1EA">Parking &amp; Vehicles</span><span style="display:block;margin-top:6px;font:400 14px/1.55 'Instrument Sans',sans-serif;color:#8A8578">The slot map, your allotment, and whose car that is.</span></figcaption>
+    </figure>
+    <figure style="margin:0;flex:0 0 auto;width:262px;scroll-snap-align:center">
+      <div style="height:520px;border:1px solid #2C3128;border-radius:28px;padding:10px;background:#1A1E15">
+        <image-slot id="scr-roles" shape="rounded" radius="20" placeholder="Committee Roles screenshot" style="width:100%;height:100%"></image-slot>
+      </div>
+      <figcaption style="margin-top:16px"><span style="display:block;font:500 15px/1.3 'Instrument Sans',sans-serif;color:#F4F1EA">Committee Roles</span><span style="display:block;margin-top:6px;font:400 14px/1.55 'Instrument Sans',sans-serif;color:#8A8578">Who holds which office, and what that office carries.</span></figcaption>
+    </figure>
+  </div>
+</section>
+</sc-if>
+
+<section id="features" data-screen-label="Features" style="padding:clamp(72px,9vw,140px) 24px">
+  <div style="max-width:1240px;margin:0 auto">
+    <h2 style="margin:0;max-width:20ch;font:400 clamp(30px,4.4vw,56px)/1.05 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">Everything that is built and <span style="font-style:italic;color:#1C3326">working.</span></h2>
+
+    <div style="margin-top:clamp(40px,5vw,72px);display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(16px,2vw,24px);align-items:start">
+      <div style="grid-column:1/-1;display:flex;align-items:center;gap:16px;margin-top:8px">
+        <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#B77A2B">Gate</span>
+        <span style="flex:1;height:1px;background:#DCD6C8;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 60%"></span>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Visitor gate passes</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Generate a QR for a guest, share it, the guard scans it. Entry and exit logged, passes expire.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Household staff passes</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Register your maid, cook, milkman or driver. The secretary approves and issues a monthly pass.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Staff attendance</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">The daily scan of a staff pass doubles as the attendance record the family can see.</p>
+      </div>
+
+      <div style="grid-column:1/-1;display:flex;align-items:center;gap:16px;margin-top:24px">
+        <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#B77A2B">Safety</span>
+        <span style="flex:1;height:1px;background:#DCD6C8;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 60%"></span>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">SOS panic button</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Raises an alert to the gate, on the screen of the guard who is on duty.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Security status</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">At Home, Away or Do Not Disturb, optionally for a fixed duration, with a standing instruction for the guard.</p>
+      </div>
+
+      <div style="grid-column:1/-1;display:flex;align-items:center;gap:16px;margin-top:24px">
+        <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#B77A2B">Money</span>
+        <span style="flex:1;height:1px;background:#DCD6C8;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 60%"></span>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Maintenance dues</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">What is owed, due dates, payment history and downloadable receipts.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">UPI collection</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">The society sets its UPI details; the treasurer verifies receipt. No card or netbanking payment in the app.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Community funds</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Contribute to fund drives and see the contributor wall.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Expenses</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">The treasurer records what the society spent, against the balance residents can see.</p>
+      </div>
+
+      <div style="grid-column:1/-1;display:flex;align-items:center;gap:16px;margin-top:24px">
+        <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#B77A2B">Community</span>
+        <span style="flex:1;height:1px;background:#DCD6C8;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 60%"></span>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Amenity booking</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Clubhouse, pool and gym, with conflict detection and approval where required.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Complaints</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Raised and tracked through a status timeline.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Notices &amp; events</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Announcements, event RSVPs and paid events.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Member directory</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Neighbours by wing and flat, with committee offices marked.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Nearby services</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Pharmacies, clinics and shops near the society. Tap to call.</p>
+      </div>
+
+      <div style="grid-column:1/-1;display:flex;align-items:center;gap:16px;margin-top:24px">
+        <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#B77A2B">Admin</span>
+        <span style="flex:1;height:1px;background:#DCD6C8;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 60%"></span>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Parking map</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Occupied against free slots, your allotment, and a vehicle-number lookup.</p>
+      </div>
+      <div style="border:1px solid #E2DCCD;border-radius:16px;padding:22px;background:#FBF9F4;transition:transform .3s,border-color .3s;animation:riseSm .9s ease both;animation-timeline:view();animation-range:entry 0% entry 50%" style-hover="transform:translateY(-4px);border-color:#1C3326">
+        <h3 style="margin:0 0 8px;font:500 16px/1.3 'Instrument Sans',sans-serif">Profile approvals</h3>
+        <p style="margin:0;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#5C6157">Edits go to the secretary for approval, including tenant to owner conversion.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Onboarding" style="padding:clamp(72px,9vw,140px) 24px;background:#1C3326;color:#F4F1EA">
+  <div style="max-width:1240px;margin:0 auto">
+    <span style="font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#E7C892">Done for you</span>
+    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(24px,4vw,64px);align-items:end">
+      <h2 style="margin:0;font:400 clamp(32px,4.6vw,58px)/1.04 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">We set your society <span style="font-style:italic;color:#E7C892">up.</span></h2>
+      <p style="margin:0;font:400 16px/1.65 'Instrument Sans',sans-serif;color:#C2CDC0;text-wrap:pretty;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">This is not a sign-up-and-figure-it-out product. Our team does the setup, and your residents join with a code.</p>
+    </div>
+    <div style="margin-top:clamp(40px,5vw,72px);display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(20px,3vw,32px)">
+      <div style="animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%">
+        <div style="height:1px;background:#3A5344;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 58%"></div>
+        <span style="display:block;margin-top:18px;font:400 13px/1 'JetBrains Mono',monospace;color:#E7C892">01</span>
+        <h3 style="margin:12px 0 8px;font:400 22px/1.2 'Instrument Serif',serif">We register the society</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#A9B8A9;text-wrap:pretty">A salesperson takes your details and creates the society in the admin portal.</p>
+      </div>
+      <div style="animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%">
+        <div style="height:1px;background:#3A5344;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 58%"></div>
+        <span style="display:block;margin-top:18px;font:400 13px/1 'JetBrains Mono',monospace;color:#E7C892">02</span>
+        <h3 style="margin:12px 0 8px;font:400 22px/1.2 'Instrument Serif',serif">Wings, floors and flats</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#A9B8A9;text-wrap:pretty">Your building structure is built out once, so every flat number already exists.</p>
+      </div>
+      <div style="animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%">
+        <div style="height:1px;background:#3A5344;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 58%"></div>
+        <span style="display:block;margin-top:18px;font:400 13px/1 'JetBrains Mono',monospace;color:#E7C892">03</span>
+        <h3 style="margin:12px 0 8px;font:400 22px/1.2 'Instrument Serif',serif">Your first secretary</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#A9B8A9;text-wrap:pretty">We appoint the secretary, who then appoints the chairman, treasurer and members.</p>
+      </div>
+      <div style="animation:riseSm 1s ease both;animation-timeline:view();animation-range:entry 0% entry 52%">
+        <div style="height:1px;background:#3A5344;transform-origin:0 50%;animation:wipeX 1s ease both;animation-timeline:view();animation-range:entry 0% entry 58%"></div>
+        <span style="display:block;margin-top:18px;font:400 13px/1 'JetBrains Mono',monospace;color:#E7C892">04</span>
+        <h3 style="margin:12px 0 8px;font:400 22px/1.2 'Instrument Serif',serif">Residents join with a code</h3>
+        <p style="margin:0;font:400 15px/1.6 'Instrument Sans',sans-serif;color:#A9B8A9;text-wrap:pretty">They register against a 6-digit society code, pick wing, floor and flat, and the secretary approves.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="FAQ" style="padding:clamp(72px,9vw,140px) 24px">
+  <div style="max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(32px,5vw,72px);align-items:start">
+    <h2 style="margin:0;position:sticky;top:96px;font:400 clamp(30px,4.4vw,54px)/1.05 'Instrument Serif',serif;letter-spacing:-.015em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">Questions committees <span style="font-style:italic;color:#1C3326">ask.</span></h2>
+    <div style="display:grid;grid-column:span 2;min-width:0">
+      <details open="{{ openFirstFaq }}" style="border-top:1px solid #DCD6C8;padding:20px 0">
+        <summary style="list-style:none;cursor:pointer;display:flex;gap:20px;align-items:baseline;font:500 17px/1.4 'Instrument Sans',sans-serif;color:#14170F">
+          <span style="flex:1">What do residents have to install?</span>
+          <span style="font:400 20px/1 'Instrument Serif',serif;color:#B77A2B">+</span>
+        </summary>
+        <p style="margin:14px 0 0;max-width:72ch;font:400 15px/1.7 'Instrument Sans',sans-serif;color:#5C6157;animation:riseSm .4s ease both">One mobile app, Android or mobile web. Guards use the same app with a guard login. Visitors install nothing — their pass arrives as a QR on WhatsApp.</p>
+      </details>
+      <details style="border-top:1px solid #DCD6C8;padding:20px 0">
+        <summary style="list-style:none;cursor:pointer;display:flex;gap:20px;align-items:baseline;font:500 17px/1.4 'Instrument Sans',sans-serif;color:#14170F">
+          <span style="flex:1">How is a resident verified?</span>
+          <span style="font:400 20px/1 'Instrument Serif',serif;color:#B77A2B">+</span>
+        </summary>
+        <p style="margin:14px 0 0;max-width:72ch;font:400 15px/1.7 'Instrument Sans',sans-serif;color:#5C6157;animation:riseSm .4s ease both">They register against your society's 6-digit code, pick their wing, floor and flat, and verify their mobile number by OTP over WhatsApp. Your secretary then approves them.</p>
+      </details>
+      <details style="border-top:1px solid #DCD6C8;padding:20px 0">
+        <summary style="list-style:none;cursor:pointer;display:flex;gap:20px;align-items:baseline;font:500 17px/1.4 'Instrument Sans',sans-serif;color:#14170F">
+          <span style="flex:1">Can residents pay maintenance inside the app?</span>
+          <span style="font:400 20px/1 'Instrument Serif',serif;color:#B77A2B">+</span>
+        </summary>
+        <p style="margin:14px 0 0;max-width:72ch;font:400 15px/1.7 'Instrument Sans',sans-serif;color:#5C6157;animation:riseSm .4s ease both">Collection is by UPI to the society's own details, with the treasurer confirming receipt. There is no card or netbanking payment inside the app.</p>
+      </details>
+      <details style="border-top:1px solid #DCD6C8;padding:20px 0">
+        <summary style="list-style:none;cursor:pointer;display:flex;gap:20px;align-items:baseline;font:500 17px/1.4 'Instrument Sans',sans-serif;color:#14170F">
+          <span style="flex:1">Who can see the society's money?</span>
+          <span style="font:400 20px/1 'Instrument Serif',serif;color:#B77A2B">+</span>
+        </summary>
+        <p style="margin:14px 0 0;max-width:72ch;font:400 15px/1.7 'Instrument Sans',sans-serif;color:#5C6157;animation:riseSm .4s ease both">The treasurer keeps the books, the chairman and secretary have oversight, and committee members handling operations do not get access to them at all.</p>
+      </details>
+      <details style="border-top:1px solid #DCD6C8;padding:20px 0">
+        <summary style="list-style:none;cursor:pointer;display:flex;gap:20px;align-items:baseline;font:500 17px/1.4 'Instrument Sans',sans-serif;color:#14170F">
+          <span style="flex:1">What happens to the paper visitor register?</span>
+          <span style="font:400 20px/1 'Instrument Serif',serif;color:#B77A2B">+</span>
+        </summary>
+        <p style="margin:14px 0 0;max-width:72ch;font:400 15px/1.7 'Instrument Sans',sans-serif;color:#5C6157;animation:riseSm .4s ease both">The scan at the gate becomes the record. Every entry and exit is timestamped against a pass that a named resident issued.</p>
+      </details>
+      <details style="border-top:1px solid #DCD6C8;border-bottom:1px solid #DCD6C8;padding:20px 0">
+        <summary style="list-style:none;cursor:pointer;display:flex;gap:20px;align-items:baseline;font:500 17px/1.4 'Instrument Sans',sans-serif;color:#14170F">
+          <span style="flex:1">How long does setup take?</span>
+          <span style="font:400 20px/1 'Instrument Serif',serif;color:#B77A2B">+</span>
+        </summary>
+        <p style="margin:14px 0 0;max-width:72ch;font:400 15px/1.7 'Instrument Sans',sans-serif;color:#5C6157;animation:riseSm .4s ease both">Our team registers the society, builds out the wings, floors and flats, and appoints your first secretary. Residents join with the code from that point on.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section id="demo" data-screen-label="CTA" style="padding:clamp(72px,9vw,140px) 24px;background:#14170F;color:#F4F1EA">
+  <div style="max-width:1240px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(32px,5vw,80px);align-items:start">
+    <div>
+      <h2 style="margin:0;font:400 clamp(32px,4.8vw,62px)/1.02 'Instrument Serif',serif;letter-spacing:-.02em;animation:rise 1s ease both;animation-timeline:view();animation-range:entry 4% entry 60%">Get your society <span style="font-style:italic;color:#E7C892">onboarded.</span></h2>
+      <p style="margin:22px 0 0;max-width:52ch;font:400 17px/1.65 'Instrument Sans',sans-serif;color:#B9B3A4;text-wrap:pretty">Tell us about your society and we will set it up and walk your committee through it. Grihive is in live pilot with a small number of real societies.</p>
+      <div style="margin-top:32px;display:grid;gap:10px;font:400 14px/1.6 'Instrument Sans',sans-serif;color:#8A8578">
+        <span>Residents install one app.</span>
+        <span>Guards use the same app with a guard login.</span>
+        <span>The committee needs nothing extra.</span>
+      </div>
+    </div>
+    <div style="background:#1A1E15;border:1px solid #2C3128;border-radius:22px;padding:clamp(22px,3vw,34px)">
+      <sc-if value="{{ sent }}">
+        <div style="display:grid;gap:12px;padding:26px 0">
+          <span style="font:400 28px/1.2 'Instrument Serif',serif;color:#E7C892">Thanks — we will call you</span>
+          <span style="font:400 15px/1.6 'Instrument Sans',sans-serif;color:#B9B3A4">Someone from the Grihive team will reach out about your society.</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ notSent }}" hint-placeholder-val="{{ true }}">
+        <form onSubmit="{{ onSubmit }}" style="display:grid;gap:16px">
+          <label style="display:grid;gap:8px;font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A8578">Society name*
+            <input required="{{ true }}" placeholder="Sai Residency CHS" style="font:400 16px/1 'Instrument Sans',sans-serif;color:#F4F1EA;background:#14170F;border:1px solid #2C3128;border-radius:10px;padding:14px 16px;outline:none" style-focus="border-color:#B77A2B" />
+          </label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px">
+            <label style="display:grid;gap:8px;font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A8578">City*
+              <input required="{{ true }}" placeholder="Pune" style="font:400 16px/1 'Instrument Sans',sans-serif;color:#F4F1EA;background:#14170F;border:1px solid #2C3128;border-radius:10px;padding:14px 16px;outline:none;width:100%" style-focus="border-color:#B77A2B" />
+            </label>
+            <label style="display:grid;gap:8px;font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A8578">Number of flats
+              <input placeholder="180" style="font:400 16px/1 'Instrument Sans',sans-serif;color:#F4F1EA;background:#14170F;border:1px solid #2C3128;border-radius:10px;padding:14px 16px;outline:none;width:100%" style-focus="border-color:#B77A2B" />
+            </label>
+          </div>
+          <label style="display:grid;gap:8px;font:500 12px/1 'Instrument Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A8578">Your name and mobile number*
+            <input required="{{ true }}" placeholder="Rohit Deshpande · 98XXXXXXXX" style="font:400 16px/1 'Instrument Sans',sans-serif;color:#F4F1EA;background:#14170F;border:1px solid #2C3128;border-radius:10px;padding:14px 16px;outline:none" style-focus="border-color:#B77A2B" />
+          </label>
+          <button type="submit" style="margin-top:6px;font:500 15px/1 'Instrument Sans',sans-serif;color:#14170F;background:#E7C892;border:none;border-radius:999px;padding:16px 24px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .25s,transform .25s" style-hover="background:#B77A2B;transform:translateY(-2px)">Book a demo <span style="font:400 16px/1 'JetBrains Mono',monospace">→</span></button>
+        </form>
+      </sc-if>
+    </div>
+  </div>
+</section>
+
+<footer style="padding:clamp(48px,6vw,88px) 24px;background:#14170F;color:#8A8578;border-top:1px solid #2C3128">
+  <div style="max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;align-items:baseline;justify-content:space-between">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:24px;height:24px;border-radius:8px;background:#1C3326;display:grid;place-items:center;color:#E7C892;font:500 12px/1 'JetBrains Mono',monospace">G</span>
+        <span style="font:400 22px/1 'Instrument Serif',serif;color:#F4F1EA">Grihive</span>
+      </div>
+      <p style="margin:14px 0 0;font:400 15px/1.6 'Instrument Sans',sans-serif">Grihive — residential society management.<br />Clarity in how a community is run.</p>
+    </div>
+    <div style="display:flex;gap:26px;font:500 14px/1 'Instrument Sans',sans-serif">
+      <a href="#gate" style="color:#B9B3A4" style-hover="color:#E7C892">The gate</a>
+      <a href="#roles" style="color:#B9B3A4" style-hover="color:#E7C892">Roles</a>
+      <a href="#features" style="color:#B9B3A4" style-hover="color:#E7C892">Features</a>
+      <a href="#demo" style="color:#B9B3A4" style-hover="color:#E7C892">Book a demo</a>
+    </div>
+  </div>
+</footer>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showScreens&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;},&quot;openFirstFaq&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;}}">
+class Component extends DCLogic {
+  state = { sent: false };
+  renderVals() {
+    return {
+      showScreens: this.props.showScreens ?? true,
+      openFirstFaq: this.props.openFirstFaq ?? true,
+      sent: this.state.sent,
+      notSent: !this.state.sent,
+      onSubmit: (e) => { e.preventDefault(); this.setState({ sent: true }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
