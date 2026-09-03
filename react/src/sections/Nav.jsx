@@ -17,13 +17,13 @@ export default function Nav() {
           href="https://app.grihive.com"
           className="cn-btn cn-btn--app"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
         >
           <svg className="cn-btn-ico" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M12 3v11m0 0 4-4m-4 4-4-4" />
             <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
           </svg>
-          <span className="cn-btn-label">Download app</span>
+          <span className="cn-btn-label">Download Grihive</span>
         </a>
 
         <a href="#demo" className="cn-btn cn-btn--nav">
