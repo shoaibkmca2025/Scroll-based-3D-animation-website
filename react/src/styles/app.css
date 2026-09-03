@@ -669,7 +669,7 @@
 /* ── phones ───────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
   .cn-nav { padding: 0 18px; height: 58px; }
-  .cn-nav-links a:not(.cn-btn--nav) { display: none; }
+  .cn-nav-links a:not(.cn-btn) { display: none; }
   .cn-brand img { height: 22px; }
   .cn-hero h1 { font-size: clamp(34px, 10vw, 46px); }
   .cn-hero-actions .cn-btn { width: 100%; }
@@ -1036,3 +1036,41 @@
 /* The gate dot pulses; this one is a steady state, not an event. */
 .cn-live--calm { background: var(--brand-pale); }
 .cn-live--calm::after { display: none; }
+
+/* ── download the app ─────────────────────────────────────────────────
+   Outlined rather than filled: the demo is still the one primary action in
+   the bar, and two solid brand buttons side by side would say neither
+   matters. */
+.cn-nav-links .cn-btn--app {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--rule-2);
+  padding: 0 16px;
+  min-height: 40px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.cn-nav-links .cn-btn--app:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-tint);
+}
+.cn-btn-ico {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* On a phone the bar has room for the brand and two buttons only if one of
+   them loses its label. The arrow is the half that still reads. */
+@media (max-width: 720px) {
+  .cn-nav-links { gap: 8px; }
+  .cn-nav-links .cn-btn--app { padding: 0; width: 40px; }
+  .cn-btn-label { display: none; }
+  .cn-nav-links .cn-btn--nav { padding: 0 14px; }
+}
