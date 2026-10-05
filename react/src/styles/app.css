@@ -5,11 +5,11 @@
    is with `data-ground`, so the rhythm is legible in the markup instead of
    being an accident of source order.
 
-   Motion is the other half of it. Everything here is either a keyframe on its
-   own clock (drifting fields, the scanning pass, a pulsing ring) or a
-   scroll-triggered reveal driven from useMotion. The ambient loops are
-   deliberately slow — 16 to 30 seconds — because at that speed they read as
-   the page being alive rather than as something demanding to be watched. */
+   Motion is the other half of it. Everything here is either a small keyframe
+   on its own clock (the scanning pass, a pulsing ring, the ticker) or a
+   scroll-triggered reveal driven from useMotion. Every loop animates only
+   transform and opacity, which the compositor runs without touching layout
+   or paint. */
 
 /* ── motion vocabulary ────────────────────────────────────────────── */
 @keyframes rise { from { opacity: 0; transform: translateY(34px); } to { opacity: 1; transform: none; } }
@@ -18,7 +18,6 @@
 @keyframes wipeX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes floatUp { from { transform: translateY(40px); } to { transform: translateY(-40px); } }
 @keyframes floatDown { from { transform: translateY(-28px); } to { transform: translateY(28px); } }
-@keyframes drift { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(4%, -5%) scale(1.08); } }
 /* transform, not `top`: animating `top` re-ran layout on every frame for as
    long as the page was open — 145 layouts a second with nothing moving. */
 @keyframes scan { 0% { transform: translateY(10px); opacity: 0; } 14% { opacity: 1; } 86% { opacity: 1; } 100% { transform: translateY(114px); opacity: 0; } }
@@ -154,7 +153,6 @@
 /* A grey label on the red band all but vanished. */
 [data-ground='brand'] .cn-kicker { color: rgba(255, 255, 255, 0.8); }
 
-.cn-num { font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
 .cn-shot { width: 100%; height: auto; }
 
 /* ── nav ──────────────────────────────────────────────────────────────
@@ -186,7 +184,10 @@
 }
 .cn-progress { position: absolute; bottom: -1px; left: 0; height: 2px; width: 0%; background: var(--brand); }
 .cn-brand { display: flex; align-items: center; min-height: 44px; }
-.cn-brand img { height: 26px; width: auto; transition: filter 0.3s ease; }
+/* The mark was 26px tall — 78px wide, smaller than the nav's own text links
+   beside it. 34px gives it the weight of the thing the page is about, and the
+   file is now drawn at 120px so it stays sharp on a 3x screen. */
+.cn-brand img { height: 34px; width: auto; transition: filter 0.3s ease; }
 .cn-nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; font-weight: 600; }
 .cn-nav-links a { color: var(--muted); transition: color 0.2s; }
 /* The text links were only as tall as their text — a 19px target. */
@@ -418,57 +419,121 @@
 }
 .cn-ticker-set span::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--brand-pale); flex: none; }
 
-/* ── card grids ───────────────────────────────────────────────────── */
+/* ── tiles ────────────────────────────────────────────────────────────
+   One card language for the page, the way a product page builds its tiles:
+   no outline, a corner large enough to read as an object, and the depth
+   coming from the ground rather than a border.
+
+     white ground   a warm grey tile, flat
+     warm ground    a white tile, lifted by --tile-shadow
+     red band       a lighter pane of the same red
+     dark ground    a lighter pane of the dark
+
+   Each opens with something to look at before anything to read — a glyph
+   for the problems and the everyday things, a step number for sequences —
+   then a title with real weight, then one line of copy.
+
+   None of them lifts on hover. They do nothing when clicked, and a card that
+   rises under the pointer is promising an action that never comes. */
 .cn-problem-grid,
 .cn-features-grid,
 .cn-onboard-grid,
-.cn-play-grid { display: grid; gap: 14px; }
-@media (min-width: 800px) {
+.cn-play-grid { display: grid; gap: 16px; }
+@media (min-width: 640px) {
   .cn-problem-grid,
   .cn-features-grid,
   .cn-onboard-grid,
-  .cn-play-grid { grid-template-columns: 1fr 1fr; }
+  .cn-play-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-/* None of these cards does anything when clicked, so none of them lifts on
-   hover any more. A card that rises under the pointer is promising an action;
-   when nothing follows, the page has taught the reader to ignore its own
-   affordances. */
+/* Four-up once there is room for four, so a set of four reads as one row
+   rather than a two-by-two block — and never three-and-an-orphan. */
+@media (min-width: 1080px) {
+  .cn-problem-grid,
+  .cn-onboard-grid,
+  .cn-play-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
 .cn-problem-card,
 .cn-feature,
 .cn-onboard-card,
-.cn-play-grid > div {
+.cn-play-card {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 26px 30px;
+  border-radius: var(--r-tile);
   background: #fff;
-  border: 1px solid var(--rule);
-  border-radius: var(--r-lg);
-  padding: 24px 24px 26px;
+  box-shadow: var(--tile-shadow);
 }
-[data-ground='brand'] .cn-onboard-card { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.18); }
-.cn-problem-card .cn-num,
-.cn-onboard-card .cn-num { display: block; font-size: 12px; letter-spacing: 0.14em; color: var(--brand); margin-bottom: 14px; }
-[data-ground='brand'] .cn-onboard-card .cn-num { color: var(--brand-pale); }
-.cn-feature-tag {
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-  color: var(--brand);
-  background: var(--brand-tint);
-  border-radius: 999px;
-  padding: 4px 10px;
-  margin-bottom: 12px;
-}
+[data-ground='paper'] .cn-feature { background: var(--tile); box-shadow: none; padding: 26px 26px 28px; }
+[data-ground='brand'] .cn-onboard-card { background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
+
 .cn-problem-card h3,
 .cn-feature h3,
 .cn-onboard-card h3,
-.cn-play-grid h3 { font-size: 17.5px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 8px; color: var(--ink); }
+.cn-play-card h3 {
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.017em;
+  margin: 0 0 8px;
+  color: var(--ink);
+  text-wrap: balance;
+}
 [data-ground='brand'] .cn-onboard-card h3 { color: #fff; }
 .cn-problem-card p,
 .cn-feature p,
 .cn-onboard-card p,
-.cn-play-grid p { margin: 0; font-size: 15px; line-height: 1.58; color: var(--muted); }
+.cn-play-card p { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--muted); text-wrap: pretty; }
 [data-ground='brand'] .cn-onboard-card p { color: var(--on-dark); }
+
+/* The glyph well. A rounded square, not a circle, so it echoes the tile
+   it sits in. */
+.cn-glyph {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  margin-bottom: 22px;
+  border-radius: 14px;
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+.cn-glyph svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Step numbers sit in a circle — it is a sequence, and a row of circles
+   reads as one before a word of it is read. */
+.cn-step {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  margin-bottom: 22px;
+  border-radius: 50%;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+[data-ground='brand'] .cn-step { background: rgba(255, 255, 255, 0.18); color: #fff; }
+[data-ground='dark'] .cn-step { background: rgba(240, 169, 142, 0.14); color: var(--brand-pale); }
+
+/* Category as a coloured label rather than a filled pill: sixteen pills was
+   sixteen extra shapes competing with the titles. The colour still groups
+   them (see the per-tag colours further down). */
+.cn-feature-tag {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
 
 /* ── the gate ─────────────────────────────────────────────────────── */
 .cn-pin { padding: 0; }
@@ -480,17 +545,16 @@
   margin-inline: auto;
   padding: var(--band) var(--gutter);
 }
-.cn-gate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; }
+.cn-gate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px; }
 .cn-gate-step {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--rule-dark);
-  border-radius: var(--r-lg);
-  padding: 24px;
-  transition: background 0.5s, border-color 0.5s, opacity 0.5s, transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-tile);
+  padding: 28px 26px 30px;
+  transition: background-color 0.5s, border-color 0.5s, opacity 0.5s, transform 0.5s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
-.cn-gate-step .cn-num { display: block; font-size: 12px; letter-spacing: 0.14em; color: var(--brand-pale); margin-bottom: 14px; }
-.cn-gate-step h3 { font-size: 17.5px; font-weight: 700; letter-spacing: -0.018em; margin: 0 0 8px; color: #fff; }
-.cn-gate-step p { margin: 0; font-size: 15px; line-height: 1.58; color: var(--on-dark-2); }
+.cn-gate-step h3 { font-size: 19px; line-height: 1.25; font-weight: 700; letter-spacing: -0.017em; margin: 0 0 8px; color: #fff; }
+.cn-gate-step p { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--on-dark-2); }
 .cn-gate-notes {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
@@ -504,21 +568,22 @@
 /* ── audiences ────────────────────────────────────────────────────── */
 .cn-aud-wrap { display: grid; gap: clamp(28px, 4vw, 52px); }
 .cn-aud-intro p { font-size: clamp(16px, 1.3vw, 18.5px); line-height: 1.6; color: var(--muted); max-width: 56ch; margin: 0; }
-.cn-aud-grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; }
+.cn-aud-grid { grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 16px; }
+/* Tiles on a white ground, so flat and outline-free like the feature tiles;
+   the four grounds are what tell the four people apart. */
 .cn-aud {
   display: flex;
   flex-direction: column;
-  border-radius: var(--r-lg);
-  padding: 24px 24px 0;
+  border-radius: var(--r-tile);
+  padding: 28px 26px 0;
   overflow: hidden;
-  border: 1px solid var(--rule);
-  background: #fff;
+  background: var(--tile);
 }
 .cn-aud .cn-kicker { margin-bottom: 12px; }
-.cn-aud--com { background: var(--brand-tint); border-color: var(--brand-wash); }
-.cn-aud--sec { background: var(--ink); border-color: rgba(255, 255, 255, 0.14); color: #fff; }
-.cn-aud--stf { background: var(--paper-warm); }
-.cn-aud h3 { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 14px; }
+.cn-aud--com { background: var(--brand-tint); }
+.cn-aud--sec { background: var(--ink); color: #fff; }
+.cn-aud--stf { background: var(--tile); }
+.cn-aud h3 { font-size: 20px; line-height: 1.25; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px; text-wrap: balance; }
 .cn-aud--sec h3 { color: #fff; }
 .cn-aud ul { display: flex; flex-direction: column; gap: 10px; font-size: 14.5px; line-height: 1.5; color: var(--muted); margin: 0 0 22px; }
 .cn-aud--sec ul { color: var(--on-dark-2); }
@@ -526,7 +591,7 @@
 .cn-aud li::before { content: ''; position: absolute; left: 0; top: 7px; width: 7px; height: 7px; border-radius: 2px; background: var(--brand); }
 .cn-aud--sec li::before { background: var(--brand-hot); }
 .cn-aud-shot { margin-top: auto; height: 170px; overflow: hidden; display: flex; justify-content: center; }
-.cn-aud-shot .cn-shot { width: 66%; align-self: flex-start; border-radius: 12px 12px 0 0; }
+.cn-aud-shot .cn-shot { width: 66%; align-self: flex-start; border-radius: 14px 14px 0 0; box-shadow: 0 -6px 24px -10px rgba(23, 17, 15, 0.22); }
 
 /* ── amenities ────────────────────────────────────────────────────── */
 .cn-garden {
@@ -555,7 +620,7 @@
 .cn-garden-shots .cn-shot:nth-child(2) { margin-bottom: 40px; }
 
 /* ── roles ────────────────────────────────────────────────────────── */
-.cn-roles-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--r-lg); background: #fff; }
+.cn-roles-scroll { overflow-x: auto; border-radius: var(--r-tile); background: #fff; box-shadow: var(--tile-shadow); }
 .cn-roles-table { width: 100%; font-size: 14.5px; min-width: 660px; }
 .cn-roles-table th {
   text-align: left;
@@ -609,9 +674,9 @@
   display: flex;
   flex-direction: column;
   padding: 14px 14px 18px;
-  background: rgba(255, 255, 255, 0.055);
-  border: 1px solid var(--rule-dark);
-  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-tile);
 }
 .cn-rail-shot { height: 280px; border-radius: var(--r-md); overflow: hidden; background: rgba(0, 0, 0, 0.25); }
 .cn-rail-shot .cn-shot { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
@@ -737,14 +802,18 @@
   :root { --nav-h: 58px; }
   .cn-nav { padding: 0 18px; }
   .cn-nav-links a:not(.cn-btn) { display: none; }
-  .cn-brand img { height: 22px; }
+  .cn-brand img { height: 28px; }
   .cn-hero h1 { font-size: clamp(34px, 10vw, 46px); }
   .cn-hero-actions .cn-btn { width: 100%; }
   .cn-mock { width: 100%; }
   .cn-problem-card,
   .cn-feature,
   .cn-onboard-card,
-  .cn-play-grid > div { padding: 20px 18px; }
+  .cn-play-card,
+  .cn-gate-step { padding: 24px 22px 26px; }
+  [data-ground='paper'] .cn-feature { padding: 22px 22px 24px; }
+  .cn-glyph,
+  .cn-step { margin-bottom: 18px; }
   .cn-aud { padding: 20px 18px 0; }
   .cn-aud-shot { height: 140px; }
   .cn-garden-shots .cn-shot { max-width: 132px; }
@@ -943,19 +1012,17 @@
 
 /* Feature tags take a colour per category, so sixteen cards read as five
    groups at a glance instead of one long list. */
-.cn-feature-tag[data-tag='Gate'] { color: var(--brand); background: var(--brand-tint); }
-.cn-feature-tag[data-tag='Safety'] { color: #9a3412; background: #fdece2; }
-.cn-feature-tag[data-tag='Money'] { color: #3f6212; background: #f0f7e2; }
-.cn-feature-tag[data-tag='Community'] { color: #6d3411; background: #fbeee6; }
-.cn-feature-tag[data-tag='Admin'] { color: #57534e; background: #f3f0ee; }
+.cn-feature-tag[data-tag='Gate'] { color: var(--brand); }
+.cn-feature-tag[data-tag='Safety'] { color: #b4400f; }
+.cn-feature-tag[data-tag='Money'] { color: #3f6212; }
+.cn-feature-tag[data-tag='Community'] { color: #7c4a1e; }
+.cn-feature-tag[data-tag='Admin'] { color: #57534e; }
 
 /* The numbered cards used to carry a 2px gradient rule across the top and the
    everyday-life cards a 3px one down the left. Against a 24px corner radius
    both read as a rendering fault — a straight edge pasted onto a curved
    one — so the cards are left as cards and the number does the work. */
 
-/* The audience cards alternate ground so the four read as four. */
-.cn-aud--res { background: var(--paper-warm); }
 
 /* A short standfirst under the headings that had none. */
 .cn-sub {

@@ -2,22 +2,22 @@
 
 export const problems = [
   {
-    n: '01',
+    icon: 'chat',
     title: 'Notices scroll away',
     body: 'A group chat where the AGM notice sits under forty forwards by evening.'
   },
   {
-    n: '02',
+    icon: 'register',
     title: 'A register nobody can read',
     body: 'Visitor names written by hand at the gate, unsearchable the moment they are needed.'
   },
   {
-    n: '03',
+    icon: 'phone',
     title: 'Maintenance chased by phone',
     body: 'The treasurer calling flat by flat, keeping the tally in a personal notebook.'
   },
   {
-    n: '04',
+    icon: 'entry',
     title: 'No record of who came in',
     body: 'When it matters there is no entry log — and no attendance record for household staff.'
   }
@@ -119,18 +119,22 @@ export const amenityChips = ['Clubhouse', 'Garden', 'Gymnasium', 'Swimming pool'
 
 export const everyday = [
   {
+    icon: 'parking',
     title: 'Parking, mapped',
     body: 'The slot map, occupied against free, your allotted slot, and a lookup for whose car that is.'
   },
   {
+    icon: 'timeline',
     title: 'Complaints with a timeline',
     body: 'Raised, seen, in progress, closed — so nobody has to ask what happened to it.'
   },
   {
+    icon: 'shield',
     title: 'Security status',
     body: 'At Home, Away or Do Not Disturb, for a fixed duration, with a standing instruction for the guard. Auto-reverts when the time is up.'
   },
   {
+    icon: 'pin',
     title: 'Nearby services',
     body: 'Local pharmacies, clinics and shops we onboard, surfaced to the societies near them. Tap to call.'
   }

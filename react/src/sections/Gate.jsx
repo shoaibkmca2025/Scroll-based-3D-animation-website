@@ -19,7 +19,7 @@ export default function Gate() {
         <div className="cn-grid cn-gate-grid">
           {gateSteps.map((s) => (
             <div key={s.n} data-pin-step className="cn-gate-step">
-              <div className="cn-num">{s.n}</div>
+              <div className="cn-step">{Number(s.n)}</div>
               <h3>{s.title}</h3>
               <p>{s.body}</p>
             </div>

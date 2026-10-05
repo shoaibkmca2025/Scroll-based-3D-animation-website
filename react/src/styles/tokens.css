@@ -59,6 +59,17 @@
 
   --shadow-md: 0 12px 32px -12px rgba(23, 17, 15, 0.18);
   --shadow-lg: 0 30px 70px -28px rgba(23, 17, 15, 0.34);
+
+  /* ── tiles ── the card language (see "tiles" in app.css). A warm grey for
+     tiles on white, the way a product page sets #f5f5f7 on white; and a
+     three-part shadow for white tiles on the warm grounds — a hairline for
+     the edge, a contact shadow, and a soft lift. */
+  --tile: #f6f1ee;
+  --r-tile: 26px;
+  --tile-shadow:
+    0 0 0 1px rgba(23, 17, 15, 0.035),
+    0 1px 2px rgba(23, 17, 15, 0.04),
+    0 12px 32px -14px rgba(23, 17, 15, 0.16);
 }
 
 *,

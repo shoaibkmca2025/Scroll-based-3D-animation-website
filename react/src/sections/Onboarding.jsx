@@ -17,7 +17,7 @@ export default function Onboarding() {
         <div className="cn-grid cn-onboard-grid">
           {onboarding.map((s) => (
             <div key={s.n} data-reveal="1" className="cn-onboard-card">
-              <div className="cn-num">{s.n}</div>
+              <div className="cn-step">{Number(s.n)}</div>
               <h3>{s.title}</h3>
               <p>{s.body}</p>
             </div>

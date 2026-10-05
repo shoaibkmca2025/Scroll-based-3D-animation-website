@@ -1,3 +1,4 @@
+import Glyph from '../components/Glyph.jsx';
 import { problems } from '../data.js';
 
 export default function Problem() {
@@ -12,8 +13,10 @@ export default function Problem() {
         </h2>
         <div className="cn-grid cn-problem-grid">
           {problems.map((p) => (
-            <div key={p.n} data-reveal="1" className="cn-problem-card">
-              <div className="cn-num">{p.n}</div>
+            <div key={p.title} data-reveal="1" className="cn-problem-card">
+              <span className="cn-glyph">
+                <Glyph name={p.icon} />
+              </span>
               <h3>{p.title}</h3>
               <p>{p.body}</p>
             </div>
