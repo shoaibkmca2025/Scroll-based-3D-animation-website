@@ -39,7 +39,7 @@ export default function App() {
       <Faq />
       <Cta />
 
-      <footer className="cn-footer">
+      <footer className="cn-footer" data-ground="dark">
         <div>Grihive — residential society management.</div>
         <div>Clarity in how a community is run.</div>
       </footer>

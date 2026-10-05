@@ -250,8 +250,8 @@ export const faqs = [
 ];
 
 export const formFields = [
-  { placeholder: 'Society name', required: true },
-  { placeholder: 'City', required: true },
-  { placeholder: 'Number of flats', required: false },
-  { placeholder: 'Your name and mobile number', required: true }
+  { id: 'society', placeholder: 'Society name', required: true, autoComplete: 'organization' },
+  { id: 'city', placeholder: 'City', required: true, autoComplete: 'address-level2' },
+  { id: 'flats', placeholder: 'Number of flats', required: false, inputMode: 'numeric' },
+  { id: 'contact', placeholder: 'Your name and mobile number', required: true, autoComplete: 'on' }
 ];

@@ -28,7 +28,7 @@ export default function Ticker() {
     </div>
   );
   return (
-    <div className="cn-ticker">
+    <div className="cn-ticker" data-ground="warm">
       <div className="cn-ticker-run">
         {set}
         {set}

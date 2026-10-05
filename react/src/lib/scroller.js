@@ -22,8 +22,10 @@ import Lenis from 'lenis';
 let lenis = null;
 let raf = 0;
 let paused = false;
+let anchorOptions = {};
 
 export function startScroller(options) {
+  anchorOptions = typeof options.anchors === 'object' ? options.anchors : {};
   /* `autoRaf` is deliberately off. Lenis's `raf()` re-registers itself from
      inside the callback when that flag is set, so calling it from the backdrop
      as well would schedule a second loop, then four, then eight. Driving one
@@ -80,4 +82,12 @@ export function pauseScroller() {
 export function resumeScroller() {
   paused = false;
   if (lenis) lenis.start();
+}
+
+/** Travel to an in-page anchor on the same curve and offset the nav links use.
+    For the one case Lenis's own anchor handling cannot cover: a link clicked
+    while it was paused, which it ignores. */
+export function scrollToAnchor(target) {
+  if (lenis) lenis.scrollTo(target, anchorOptions);
+  else target.scrollIntoView();
 }

@@ -24,9 +24,11 @@
   --muted: #6b605c;
   --muted-2: #8c8079;
   --muted-3: #b4a8a2;
-  --on-dark: rgba(255, 255, 255, 0.72);
-  --on-dark-2: rgba(255, 255, 255, 0.46);
-  --on-dark-3: rgba(255, 255, 255, 0.26);
+  /* Secondary text on the dark grounds was 0.46, which sat right on the AA
+     line once it landed on a tinted card. 0.6 clears it with room. */
+  --on-dark: rgba(255, 255, 255, 0.76);
+  --on-dark-2: rgba(255, 255, 255, 0.6);
+  --on-dark-3: rgba(255, 255, 255, 0.3);
 
   /* ── rules ── */
   --rule: #efe6e2;
@@ -45,6 +47,11 @@
   --page: 1180px;
   --gutter: clamp(20px, 5vw, 40px);
   --band: clamp(72px, 9vw, 140px);
+  --nav-h: 64px;
+
+  /* Focus ring. Brand red disappears on the dark grounds, so those swap it
+     for the pale tint — see [data-ground] in app.css. */
+  --focus: var(--brand);
 
   --r-sm: 10px;
   --r-md: 16px;
@@ -86,6 +93,22 @@ figure { margin: 0; }
 table { border-collapse: collapse; }
 summary::-webkit-details-marker { display: none; }
 
+/* Press feedback is drawn by the controls themselves (see .cn-btn:active), so
+   the grey flash phones paint over a tapped link is a second, laggier signal. */
+a, button, summary { -webkit-tap-highlight-color: transparent; }
+
 :focus { outline: none; }
-:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+.cn-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
 ::selection { background: var(--brand-wash); }

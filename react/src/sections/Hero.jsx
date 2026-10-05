@@ -11,7 +11,7 @@ import PassQr from '../components/PassQr.jsx';
    reveals something real instead of a gradient. */
 export default function Hero() {
   return (
-    <section id="top">
+    <section id="top" data-ground="dark">
       <ScrollExpandHero
         bgImageSrc="hero-bg.webp"
         mediaSrc="hero-media.webp"
@@ -95,7 +95,7 @@ export default function Hero() {
               <img src="hero-after.webp" alt="A residential society" width="1100" height="700" loading="lazy" />
             </figure>
             <div className="se-after-copy">
-              <div className="cn-kicker cn-kicker--onink cn-mb12">One backend</div>
+              <div className="cn-kicker cn-kicker--onink">One backend</div>
               <h2>Every part of the society, on the same records.</h2>
               <ul className="se-after-list">
                 <li>

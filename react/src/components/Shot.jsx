@@ -21,7 +21,9 @@ export default function Shot({ img, alt, sizes = '(max-width: 720px) 60vw, 380px
       height="1212"
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"
-      fetchPriority={priority ? 'high' : 'auto'}
+      // lowercase: React 18 has no camelCase mapping for this attribute and
+      // warns on every screenshot if it is spelled the DOM-property way
+      fetchpriority={priority ? 'high' : 'auto'}
     />
   );
 }

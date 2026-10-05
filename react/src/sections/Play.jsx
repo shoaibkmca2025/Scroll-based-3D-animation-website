@@ -4,7 +4,7 @@ export default function Play() {
   return (
     <section data-ground="warm" className="cn-sec">
       <div className="cn-play-panel cn-surface cn-surface--ink">
-        <div data-reveal="1" className="cn-kicker cn-kicker--light cn-mb16">
+        <div data-reveal="1" className="cn-kicker cn-kicker--light">
           Everyday life
         </div>
         <h2 data-reveal="1">The small things a society argues about, written down.</h2>

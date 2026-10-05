@@ -6,7 +6,7 @@ export default function Garden() {
     <section data-ground="paper-warm" className="cn-sec">
       <div className="cn-grid cn-garden">
         <div className="cn-garden-copy">
-          <div data-reveal="1" className="cn-kicker cn-kicker--sage cn-mb16">Shared spaces</div>
+          <div data-reveal="1" className="cn-kicker cn-kicker--sage">Shared spaces</div>
           <h2 data-reveal="1">The clubhouse, the garden, the gym — booked, not argued over.</h2>
           <p data-reveal="1">
             Amenity booking with conflict detection, and approval where the committee wants it.

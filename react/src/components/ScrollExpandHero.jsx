@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { pauseScroller, resumeScroller } from '../lib/scroller.js';
+import { pauseScroller, resumeScroller, scrollToAnchor } from '../lib/scroller.js';
+
+// Keys that would scroll the page down. While the panel is opening the
+// document is locked, so without this they did nothing at all and a keyboard
+// user had no way past the first screen.
+const FORWARD_KEYS = new Set(['ArrowDown', 'PageDown', ' ', 'End']);
 
 /**
  * A hero whose media panel expands as you scroll, then releases the page and
@@ -56,6 +61,9 @@ export default function ScrollExpandHero({
   const [isPhone, setIsPhone] = useState(false);
   const touchStartY = useRef(0);
   const sectionRef = useRef(null);
+  const tween = useRef(0);
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
 
   /* Pin the document while the panel is opening, and hand the wheel back the
      moment it is open.
@@ -84,8 +92,8 @@ export default function ScrollExpandHero({
   }, [expanded]);
 
   useEffect(() => {
-    const advance = (delta) => {
-      const next = Math.min(Math.max(progress + delta, 0), 1);
+    const setTo = (value) => {
+      const next = Math.min(Math.max(value, 0), 1);
       setProgress(next);
       if (next >= 1) {
         setExpanded(true);
@@ -93,6 +101,29 @@ export default function ScrollExpandHero({
       } else if (next < 0.75) {
         setShowContent(false);
       }
+    };
+
+    // Any direct input takes over from a running open, from wherever the
+    // panel has got to — it never has to finish first.
+    const stopTween = () => cancelAnimationFrame(tween.current);
+    const advance = (delta) => {
+      stopTween();
+      setTo(progressRef.current + delta);
+    };
+
+    /* For discrete input — a key, a link — that has no distance of its own to
+       drive the panel with. Starts from the panel's current size, and eases
+       out so it moves off at once and settles into the open state. */
+    const openFully = () => {
+      stopTween();
+      const from = progressRef.current;
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / 560);
+        setTo(from + (1 - from) * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) tween.current = requestAnimationFrame(step);
+      };
+      tween.current = requestAnimationFrame(step);
     };
 
     const onWheel = (e) => {
@@ -103,6 +134,37 @@ export default function ScrollExpandHero({
         e.preventDefault();
         advance(e.deltaY * 0.0009);
       }
+    };
+
+    const onKey = (e) => {
+      if (expanded || e.altKey || e.ctrlKey || e.metaKey) return;
+      // Tab opens it too, without being swallowed: focus moving into the
+      // page would otherwise scroll a locked document to an element nobody
+      // can scroll back from.
+      if (e.key === 'Tab') openFully();
+      else if (FORWARD_KEYS.has(e.key) && !e.target.closest?.('input, textarea, select, [contenteditable]')) {
+        e.preventDefault();
+        openFully();
+      }
+    };
+
+    /* A nav link clicked while the page is locked. The browser would jump to
+       the section anyway — a locked document still takes a programmatic
+       scroll — and leave it locked there, unable to scroll in either
+       direction until enough wheel notches had opened a hero nobody could
+       see. Open it at once and make the trip the link asked for. */
+    const onClick = (e) => {
+      if (expanded || e.defaultPrevented || e.button !== 0) return;
+      const link = e.target.closest?.('a[href^="#"]');
+      const target = link && link.hash && document.querySelector(link.hash);
+      if (!target) return;
+      e.preventDefault();
+      e.stopPropagation();
+      stopTween();
+      setTo(1);
+      history.pushState(null, '', link.hash);
+      // a frame later, once the effect above has released the scroller
+      requestAnimationFrame(() => requestAnimationFrame(() => scrollToAnchor(target)));
     };
 
     const onTouchStart = (e) => {
@@ -133,13 +195,20 @@ export default function ScrollExpandHero({
     addEventListener('touchstart', onTouchStart, { passive: false });
     addEventListener('touchmove', onTouchMove, { passive: false });
     addEventListener('touchend', onTouchEnd);
+    addEventListener('keydown', onKey);
+    // capture, so it runs before the smooth-scroll layer's own anchor handler
+    addEventListener('click', onClick, true);
     return () => {
       removeEventListener('wheel', onWheel);
       removeEventListener('touchstart', onTouchStart);
       removeEventListener('touchmove', onTouchMove);
       removeEventListener('touchend', onTouchEnd);
+      removeEventListener('keydown', onKey);
+      removeEventListener('click', onClick, true);
     };
-  }, [progress, expanded]);
+  }, [expanded]);
+
+  useEffect(() => () => cancelAnimationFrame(tween.current), []);
 
   useEffect(() => {
     const check = () => setIsPhone(innerWidth < 768);
@@ -190,6 +259,15 @@ export default function ScrollExpandHero({
             </div>
           </div>
 
+          {date && (
+            <p
+              className="se-chip se-eyebrow"
+              style={{ transform: `translateX(-${titleShift}vw)`, opacity: Math.max(0, 1 - progress * 2.5) }}
+            >
+              {date}
+            </p>
+          )}
+
           {/* The two halves of the title part as the panel opens between
               them, which is what makes the expansion feel like it is pushing
               the page apart rather than just growing. */}
@@ -198,22 +276,32 @@ export default function ScrollExpandHero({
             <motion.h1 style={{ transform: `translateX(${titleShift}vw)` }}>{restOfTitle}</motion.h1>
           </div>
 
-          <div className="se-meta">
-            {date && <p style={{ transform: `translateX(-${titleShift}vw)` }}>{date}</p>}
-            {scrollToExpand && (
-              <p className="se-hint" style={{ transform: `translateX(${titleShift}vw)` }}>
-                {scrollToExpand}
-              </p>
-            )}
-          </div>
+          {/* Gone as soon as the gesture has started — by then it has been
+              understood. */}
+          {scrollToExpand && (
+            <p
+              className="se-chip se-hint"
+              style={{ opacity: Math.max(0, 1 - progress * 5) }}
+              aria-hidden="true"
+            >
+              {scrollToExpand}
+              <svg viewBox="0 0 24 24">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </p>
+          )}
         </div>
 
+        {/* `inert` while hidden, not just aria-hidden: an invisible link that
+            still takes focus sends a keyboard user to a button they cannot
+            see. */}
         <motion.div
           className="se-content"
           initial={{ opacity: 0 }}
           animate={{ opacity: showContent ? 1 : 0 }}
           transition={{ duration: 0.7 }}
           aria-hidden={!showContent}
+          inert={showContent ? undefined : ''}
         >
           {children}
         </motion.div>

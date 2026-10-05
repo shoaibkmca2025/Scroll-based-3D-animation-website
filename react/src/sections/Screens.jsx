@@ -7,7 +7,7 @@ export default function Screens() {
       <span className="cn-orb cn-orb--a" aria-hidden="true" />
       <span className="cn-orb cn-orb--b" aria-hidden="true" />
       <div className="cn-screens-head">
-        <div data-reveal="1" className="cn-kicker cn-kicker--onink cn-mb12">Inside the app</div>
+        <div data-reveal="1" className="cn-kicker cn-kicker--onink">Inside the app</div>
         <h2 data-reveal="1">The screens your society will live in.</h2>
         <p data-reveal="1" className="cn-sub">
           One app for residents and guards, with the committee's controls inside it. Swipe through

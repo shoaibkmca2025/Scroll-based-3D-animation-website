@@ -24,7 +24,6 @@
 @keyframes marquee { to { transform: translateX(-50%); } }
 @keyframes bobY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-@keyframes sheen { 0% { transform: translateX(-130%) skewX(-18deg); } 55%, 100% { transform: translateX(260%) skewX(-18deg); } }
 @keyframes warp { 0% { transform: rotate(0deg) scale(1.3); } 50% { transform: rotate(180deg) scale(1.7); } 100% { transform: rotate(360deg) scale(1.3); } }
 
 /* ── shell ───────────────────────────────────────────────────────── */
@@ -35,13 +34,16 @@
    without that side effect. */
 .cn-page { position: relative; width: 100%; overflow-x: clip; }
 
+/* `clip`, not `hidden`, for the same reason as .cn-page above: `hidden` makes
+   every section a scroll container, which is what stopped the gate stage and
+   the features heading from sticking. The orbs still get cut off at the edge. */
 .cn-sec,
 .cn-screens,
 .cn-faq,
 .cn-cta {
   position: relative;
   padding: var(--band) var(--gutter);
-  overflow: hidden;
+  overflow: clip;
 }
 .cn-sec > *,
 .cn-faq > *,
@@ -61,6 +63,8 @@
 [data-ground='brand'] { background: linear-gradient(160deg, var(--brand), var(--brand-deep)); color: #fff; }
 [data-ground='dark'] h2,
 [data-ground='brand'] h2 { color: #fff; }
+[data-ground='dark'],
+[data-ground='brand'] { --focus: var(--brand-pale); }
 
 /* Slow colour fields behind the dark and brand sections: two blurred blobs on
    different clocks, so they never quite repeat against each other. */
@@ -77,6 +81,7 @@
 
 /* ── type ─────────────────────────────────────────────────────────── */
 .cn-sec h2,
+.cn-screens h2,
 .cn-faq h2,
 .cn-cta h2 {
   font-size: clamp(30px, 4.4vw, 56px);
@@ -86,6 +91,11 @@
   max-width: 20ch;
   text-wrap: balance;
 }
+/* A heading with no lede under it sat 20px off its cards — closer to them
+   than the cards are to each other's text, so it read as a card title. */
+.cn-sec h2 + .cn-grid { margin-top: clamp(20px, 2.6vw, 36px); }
+.cn-features-panel > h2 + .cn-grid { margin-top: 0; }
+
 .cn-lede,
 .cn-gate-lede,
 .cn-roles-lede,
@@ -102,15 +112,21 @@
 [data-ground='brand'] .cn-onboard-lede { color: var(--on-dark); }
 
 /* Mono label with a rule that draws in — the small technical mark above every
-   section heading. */
+   section heading.
+
+   It owns the gap beneath it. That used to come from a utility class, which
+   half the sections forgot, so some labels sat flush on their heading and the
+   rest floated 14, 18 or 22px above it. */
 .cn-kicker {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   gap: 10px;
+  margin-bottom: 18px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--brand);
 }
@@ -124,16 +140,25 @@
 }
 .cn-kicker--light,
 .cn-kicker--onink { color: var(--brand-pale); }
+/* --muted, not --muted-2: at 11px the lighter grey measured 3.6:1. */
 .cn-kicker--sage,
-.cn-kicker--neutral { color: var(--muted-2); }
-.cn-mb12 { margin-bottom: 14px; }
-.cn-mb16 { margin-bottom: 18px; }
-.cn-mb20 { margin-bottom: 22px; }
+.cn-kicker--neutral { color: var(--muted); }
+/* A grey label on the red band all but vanished. */
+[data-ground='brand'] .cn-kicker { color: rgba(255, 255, 255, 0.8); }
 
 .cn-num { font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
 .cn-shot { width: 100%; height: auto; }
 
-/* ── nav ──────────────────────────────────────────────────────────── */
+/* ── nav ──────────────────────────────────────────────────────────────
+   A translucent material the page scrolls under, not a white strip on top
+   of it. The negative margin lets the hero start at the very top behind the
+   bar, so the expanding panel is centred on the screen rather than on the
+   screen minus 64px.
+
+   The material follows the ground beneath it. A light bar blurred over the
+   near-black sections went a muddy grey and over the red band a washed-out
+   pink; useScrollFx sets `data-tone` from whichever section is under the
+   bar, and the dark tone swaps in a dark material and a white mark. */
 .cn-nav {
   position: sticky;
   top: 0;
@@ -142,18 +167,34 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  height: 64px;
+  height: var(--nav-h);
+  margin-bottom: calc(-1 * var(--nav-h));
   padding: 0 var(--gutter);
-  background: rgba(255, 255, 255, 0.86);
-  backdrop-filter: saturate(1.6) blur(14px);
-  border-bottom: 1px solid var(--rule);
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: saturate(1.8) blur(20px);
+  backdrop-filter: saturate(1.8) blur(20px);
+  border-bottom: 1px solid rgba(23, 17, 15, 0.08);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 .cn-progress { position: absolute; bottom: -1px; left: 0; height: 2px; width: 0%; background: var(--brand); }
 .cn-brand { display: flex; align-items: center; min-height: 44px; }
-.cn-brand img { height: 26px; width: auto; }
+.cn-brand img { height: 26px; width: auto; transition: filter 0.3s ease; }
 .cn-nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; font-weight: 600; }
 .cn-nav-links a { color: var(--muted); transition: color 0.2s; }
+/* The text links were only as tall as their text — a 19px target. */
+.cn-nav-links a:not(.cn-btn) { display: inline-flex; align-items: center; min-height: 44px; }
 .cn-nav-links a:not(.cn-btn):hover { color: var(--ink); }
+
+.cn-nav[data-tone='dark'] {
+  --focus: var(--brand-pale);
+  background: rgba(23, 17, 15, 0.62);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+.cn-nav[data-tone='dark'] .cn-brand img { filter: brightness(0) invert(1); }
+.cn-nav[data-tone='dark'] .cn-nav-links a:not(.cn-btn) { color: rgba(255, 255, 255, 0.76); }
+.cn-nav[data-tone='dark'] .cn-nav-links a:not(.cn-btn):hover { color: #fff; }
+.cn-nav[data-tone='dark'] .cn-nav-links .cn-btn--app { color: #fff; border-color: rgba(255, 255, 255, 0.26); }
+.cn-nav[data-tone='dark'] .cn-nav-links .cn-btn--app:hover { color: #fff; border-color: rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); }
 
 /* ── buttons ──────────────────────────────────────────────────────── */
 .cn-btn {
@@ -168,9 +209,10 @@
   font-size: 15px;
   min-height: 46px;
   overflow: hidden;
-  transition: transform 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
+  transition: transform 0.1s ease-out, background-color 0.2s, color 0.2s, border-color 0.2s;
 }
-.cn-btn:active { transform: translateY(1px); }
+/* Feedback on the press itself, and immediately — not a 1px nudge. */
+.cn-btn:active { transform: scale(0.97); }
 .cn-nav-links .cn-btn--nav {
   background: var(--brand);
   color: #fff;
@@ -182,22 +224,13 @@
 .cn-nav-links .cn-btn--nav:hover { background: var(--brand-deep); color: #fff; }
 .cn-btn--primary { background: var(--brand); color: #fff; padding: 15px 28px; }
 .cn-btn--primary:hover { background: var(--brand-deep); color: #fff; }
-/* A light sweeps the primary action every five seconds. */
-.cn-btn--primary::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 42%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
-  animation: sheen 5s ease-in-out infinite;
-  pointer-events: none;
-}
 .cn-btn--ghost { border: 1px solid var(--rule-2); color: var(--ink); padding: 14px 24px; background: #fff; }
 .cn-btn--ghost:hover { border-color: var(--brand); color: var(--brand); }
-[data-ground='dark'] .cn-btn--ghost,
-.cn-hero .cn-btn--ghost { background: transparent; border-color: var(--on-dark-3); color: #fff; }
-[data-ground='dark'] .cn-btn--ghost:hover,
-.cn-hero .cn-btn--ghost:hover { border-color: #fff; color: #fff; }
+/* On a dark ground the secondary action is outlined, so the filled red one
+   is unmistakably the primary. It was a solid white pill in the hero, which
+   out-shouted the button it sat next to. */
+[data-ground='dark'] .cn-btn--ghost { background: transparent; border-color: rgba(255, 255, 255, 0.34); color: #fff; }
+[data-ground='dark'] .cn-btn--ghost:hover { border-color: #fff; background: rgba(255, 255, 255, 0.08); color: #fff; }
 
 /* ── hero ─────────────────────────────────────────────────────────── */
 .cn-hero { position: relative; background: var(--ink); color: #fff; overflow: clip; }
@@ -387,6 +420,10 @@
   .cn-onboard-grid,
   .cn-play-grid { grid-template-columns: 1fr 1fr; }
 }
+/* None of these cards does anything when clicked, so none of them lifts on
+   hover any more. A card that rises under the pointer is promising an action;
+   when nothing follows, the page has taught the reader to ignore its own
+   affordances. */
 .cn-problem-card,
 .cn-feature,
 .cn-onboard-card,
@@ -395,14 +432,8 @@
   border: 1px solid var(--rule);
   border-radius: var(--r-lg);
   padding: 24px 24px 26px;
-  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.35s, box-shadow 0.35s;
 }
-.cn-problem-card:hover,
-.cn-feature:hover,
-.cn-onboard-card:hover,
-.cn-play-grid > div:hover { transform: translateY(-3px); border-color: var(--brand-wash); box-shadow: var(--shadow-md); }
 [data-ground='brand'] .cn-onboard-card { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.18); }
-[data-ground='brand'] .cn-onboard-card:hover { background: rgba(255, 255, 255, 0.13); border-color: rgba(255, 255, 255, 0.3); box-shadow: none; }
 .cn-problem-card .cn-num,
 .cn-onboard-card .cn-num { display: block; font-size: 12px; letter-spacing: 0.14em; color: var(--brand); margin-bottom: 14px; }
 [data-ground='brand'] .cn-onboard-card .cn-num { color: var(--brand-pale); }
@@ -432,8 +463,14 @@
 
 /* ── the gate ─────────────────────────────────────────────────────── */
 .cn-pin { padding: 0; }
-.cn-gate-panel { padding: var(--band) var(--gutter); }
-.cn-gate-panel > * { max-width: var(--page); margin-inline: auto; }
+/* The panel is the page-width column. It used to push `max-width: page` onto
+   each child instead, which out-ranked the lede's own 56ch and the heading's
+   20ch, so the gate lede ran the full 1180px. */
+.cn-gate-panel {
+  max-width: calc(var(--page) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--band) var(--gutter);
+}
 .cn-gate-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px; }
 .cn-gate-step {
   background: rgba(255, 255, 255, 0.05);
@@ -467,9 +504,8 @@
   overflow: hidden;
   border: 1px solid var(--rule);
   background: #fff;
-  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.35s;
 }
-.cn-aud:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.cn-aud .cn-kicker { margin-bottom: 12px; }
 .cn-aud--com { background: var(--brand-tint); border-color: var(--brand-wash); }
 .cn-aud--sec { background: var(--ink); border-color: rgba(255, 255, 255, 0.14); color: #fff; }
 .cn-aud--stf { background: var(--paper-warm); }
@@ -516,32 +552,46 @@
   text-align: left;
   padding: 16px 14px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted-3);
+  color: var(--muted);
   background: var(--paper-warm);
 }
 .cn-roles-table td { padding: 16px 14px; color: var(--muted); vertical-align: top; }
 .cn-roles-table td:first-child { color: var(--ink); font-weight: 700; }
 .cn-roles-table tbody tr { border-top: 1px solid var(--rule); }
-.cn-yes { color: var(--brand); font-weight: 600; }
-.cn-no { color: var(--muted-3); }
+/* Qualified by the table. `.cn-yes` alone lost to `.cn-roles-table td`, so
+   "Full" and "No" were drawn in the same grey and the table that exists to
+   show who can do what showed nobody could do anything. */
+.cn-roles-table td.cn-yes { color: var(--brand); font-weight: 600; }
+.cn-roles-table td.cn-no { color: var(--muted); font-weight: 400; }
 .cn-roles-foot { margin: 22px 0 0; font-size: 14.5px; line-height: 1.6; color: var(--muted-2); max-width: 66ch; }
 
 /* ── the rail ─────────────────────────────────────────────────────── */
-.cn-screens-head { max-width: var(--page); margin: 0 auto clamp(28px, 4vw, 46px); padding-inline: var(--gutter); position: relative; z-index: 2; }
+/* The section already pads by a gutter; padding the head again put this one
+   heading 40px right of every other on the page. */
+.cn-screens-head { max-width: var(--page); margin: 0 auto clamp(28px, 4vw, 46px); position: relative; z-index: 2; }
+/* Bleeds to both screen edges, but the first card lines up with the heading
+   above it. Padding percentages resolve against the section's content box;
+   scroll-padding resolves against the rail itself, hence the two forms. */
 .cn-rail {
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding: 0 var(--gutter) 20px;
+  margin-inline: calc(-1 * var(--gutter));
+  padding: 4px calc(max(0px, (100% - var(--page)) / 2) + var(--gutter)) 20px;
+  scroll-padding-inline: max(var(--gutter), (100% - var(--page)) / 2);
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   position: relative;
   z-index: 2;
 }
+/* While the page scroll is steering the rail, snapping would pull each step
+   back to the nearest card. It comes back the moment someone takes the rail
+   in hand. */
+.cn-rail[data-driven] { scroll-snap-type: none; }
 .cn-rail::-webkit-scrollbar { display: none; }
 .cn-rail-item {
   flex: 0 0 auto;
@@ -553,9 +603,7 @@
   background: rgba(255, 255, 255, 0.055);
   border: 1px solid var(--rule-dark);
   border-radius: var(--r-lg);
-  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), background 0.35s;
 }
-.cn-rail-item:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.1); }
 .cn-rail-shot { height: 280px; border-radius: var(--r-md); overflow: hidden; background: rgba(0, 0, 0, 0.25); }
 .cn-rail-shot .cn-shot { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
 .cn-rail-cap { margin-top: 14px; font-size: 13.5px; line-height: 1.5; color: var(--on-dark-2); }
@@ -577,7 +625,9 @@
   min-height: 44px;
   transition: color 0.2s;
 }
-.cn-faq-item summary:hover { color: var(--brand); }
+@media (hover: hover) {
+  .cn-faq-item summary:hover { color: var(--brand); }
+}
 .cn-faq-item summary span { color: var(--brand); font-size: 22px; line-height: 1; transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1); }
 .cn-faq-item[open] summary span { transform: rotate(45deg); }
 .cn-faq-item p { margin: 0 0 24px; font-size: 15.5px; line-height: 1.62; color: var(--muted); max-width: 66ch; animation: riseSm 0.4s ease both; }
@@ -593,18 +643,21 @@
 .cn-cta-panel > div > p { font-size: 16.5px; line-height: 1.6; color: var(--on-dark); margin: 0 0 24px; max-width: 44ch; }
 .cn-cta-note { font-family: var(--mono); font-size: 12.5px; color: var(--on-dark-2); line-height: 2; }
 .cn-form { display: flex; flex-direction: column; gap: 10px; }
+/* 16px, not 15: below 16 iOS zooms the whole page on focus and leaves it
+   zoomed after the keyboard closes. */
 .cn-form input {
+  width: 100%;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--rule-dark);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--r-md);
   padding: 15px 18px;
   color: #fff;
-  font-size: 15px;
+  font-size: 16px;
   font-family: var(--font);
-  min-height: 50px;
+  min-height: 52px;
   transition: border-color 0.2s, background 0.2s;
 }
-.cn-form input::placeholder { color: var(--on-dark-3); }
+.cn-form input::placeholder { color: rgba(255, 255, 255, 0.5); }
 .cn-form input:focus { border-color: var(--brand-hot); background: rgba(255, 255, 255, 0.1); }
 .cn-form button {
   margin-top: 6px;
@@ -618,9 +671,10 @@
   font-family: var(--font);
   cursor: pointer;
   min-height: 52px;
-  transition: background 0.2s;
+  transition: transform 0.1s ease-out, background-color 0.2s;
 }
 .cn-form button:hover { background: var(--brand-bright); }
+.cn-form button:active { transform: scale(0.98); }
 
 /* ── footer ───────────────────────────────────────────────────────── */
 .cn-footer {
@@ -647,9 +701,12 @@
 .cn-hero:not([data-hero-live]) .cn-hero-track { height: auto; }
 .cn-hero:not([data-hero-live]) .cn-hero-stage { position: static; min-height: 0; }
 
+/* The heading rides down beside the sixteen cards instead of leaving a tall
+   empty column under it. This targeted a .cn-features-head that the markup
+   never had, so it never stuck. */
 @media (min-width: 900px) {
   .cn-features-panel { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: start; }
-  .cn-features-head { position: sticky; top: 96px; }
+  .cn-features-panel > h2 { position: sticky; top: calc(var(--nav-h) + 32px); }
 }
 
 [data-parallax] { will-change: transform; }
@@ -668,7 +725,8 @@
 
 /* ── phones ───────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
-  .cn-nav { padding: 0 18px; height: 58px; }
+  :root { --nav-h: 58px; }
+  .cn-nav { padding: 0 18px; }
   .cn-nav-links a:not(.cn-btn) { display: none; }
   .cn-brand img { height: 22px; }
   .cn-hero h1 { font-size: clamp(34px, 10vw, 46px); }
@@ -681,7 +739,7 @@
   .cn-aud { padding: 20px 18px 0; }
   .cn-aud-shot { height: 140px; }
   .cn-garden-shots .cn-shot { max-width: 132px; }
-  .cn-rail { gap: 12px; padding: 0 18px 18px; }
+  .cn-rail { gap: 12px; }
   .cn-rail-item { width: 208px; }
   .cn-rail-shot { height: 232px; }
   .cn-faq-item summary { font-size: 16px; padding: 18px 0; }
@@ -703,6 +761,17 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* Press feedback is a change of state, not travel, so it stays — as a
+     dim rather than a shrink. */
+  .cn-btn:active,
+  .cn-form button:active { transform: none; opacity: 0.82; }
+}
+
+/* Someone who has asked for less transparency gets solid chrome: the blur is
+   what makes text over a moving page hard to hold on to. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .cn-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom-color: var(--rule-2); }
+  .cn-nav[data-tone='dark'] { background: var(--ink); border-bottom-color: rgba(255, 255, 255, 0.2); }
 }
 
 /* ── expanding hero ───────────────────────────────────────────────────
@@ -781,25 +850,46 @@
   color: #fff;
   margin: 0;
 }
-.se-meta {
+/* The two small labels used to be 11px tracked-out mono laid straight over
+   the photograph, where they broke up into the window frames. They now sit
+   on a chip of dark material — blurred and tinted so the words stay legible
+   whatever the image does behind them. */
+.se-chip {
   position: relative;
-  z-index: 10;
-  margin-top: 18px;
-  display: flex;
-  flex-direction: column;
+  z-index: 30;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  text-align: center;
-}
-.se-meta p {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--brand-pale);
   margin: 0;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: rgba(23, 17, 15, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  backdrop-filter: blur(16px) saturate(1.6);
 }
-.se-hint { color: var(--on-dark-2) !important; animation: blink 2.6s ease-in-out infinite; }
+.se-eyebrow { margin-bottom: 20px; }
+/* Pinned to the foot of the screen and pointing the way the gesture goes. It
+   holds still: a label that pulses forever is a slow flicker in the corner of
+   the eye, and it has said everything it needs to the first time. */
+.se-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.86);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.se-hint svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .se-chip { background: var(--ink); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
 
 .se-content { position: relative; z-index: 10; width: 100%; }
 
@@ -808,9 +898,12 @@
   .se-title h1 { font-size: clamp(30px, 9vw, 44px); }
 }
 
-/* The copy the expansion reveals. */
+/* The copy the expansion reveals. Page-wide, so the two-column block under
+   it gets the width it was laid out for — inside the old 720px column the
+   photo shrank to a thumbnail and the heading broke a word to a line. The
+   lede keeps its own measure. */
 .se-copy {
-  max-width: 720px;
+  max-width: calc(var(--page) + 2 * var(--gutter));
   margin: 0 auto;
   padding: clamp(40px, 6vw, 88px) var(--gutter) clamp(56px, 7vw, 96px);
   text-align: center;
@@ -819,7 +912,9 @@
   font-size: clamp(16px, 1.4vw, 20px);
   line-height: 1.6;
   color: var(--on-dark);
-  margin: 0 0 28px;
+  max-width: 40em;
+  margin: 0 auto 28px;
+  text-wrap: pretty;
 }
 .se-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 @media (max-width: 720px) {
@@ -845,28 +940,10 @@
 .cn-feature-tag[data-tag='Community'] { color: #6d3411; background: #fbeee6; }
 .cn-feature-tag[data-tag='Admin'] { color: #57534e; background: #f3f0ee; }
 
-/* A hairline of brand across the top of each numbered card, drawn in on
-   reveal. Cheap, and it stops a white card being only a white card. */
-.cn-problem-card,
-.cn-onboard-card { position: relative; overflow: hidden; }
-.cn-problem-card::before,
-.cn-onboard-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--brand), var(--brand-pale));
-  transform-origin: left;
-  animation: wipeX 0.9s ease both;
-}
-[data-ground='brand'] .cn-onboard-card::before { background: linear-gradient(90deg, #fff, rgba(255,255,255,0.25)); }
-
-/* The everyday-life cards sit on the warm band; giving them a tinted face and
-   a brand rule down the side keeps that section from going flat. */
-[data-ground='warm'] .cn-play-grid > div { border-left: 3px solid var(--brand-wash); }
-[data-ground='warm'] .cn-play-grid > div:hover { border-left-color: var(--brand); }
+/* The numbered cards used to carry a 2px gradient rule across the top and the
+   everyday-life cards a 3px one down the left. Against a 24px corner radius
+   both read as a rendering fault — a straight edge pasted onto a curved
+   one — so the cards are left as cards and the number does the work. */
 
 /* The audience cards alternate ground so the four read as four. */
 .cn-aud--res { background: var(--paper-warm); }
@@ -947,7 +1024,6 @@
 /* The title is the top layer and gets its own weight rather than a blend. */
 .se-title { position: relative; z-index: 30; }
 .se-title h1 { text-shadow: 0 2px 30px rgba(23, 17, 15, 0.55); }
-.se-meta { position: relative; z-index: 30; }
 
 /* The panel darkens its own photo so the mock-ups have something to sit on. */
 .se-panel-veil { background: rgba(23, 17, 15, 0.55) !important; }
@@ -961,13 +1037,6 @@
   animation: none;
 }
 .se-panel-inner .cn-mock-qr { background-color: rgba(255, 255, 255, 0.06); }
-
-/* `overflow: hidden` on an ancestor makes it a scroll container, and a scroll
-   container kills `position: sticky` inside it. The gate is a .cn-sec, so it
-   inherited that and its stage never stuck — it scrolled past and left a whole
-   empty viewport of bare track behind it, which is where the page looked
-   blank. `clip` does the same clipping without becoming a scroll container. */
-.cn-pin { overflow: clip; }
 
 /* ── the two hero cards ───────────────────────────────────────────────
    The card inherited near-black body text, which on a dark card meant the
@@ -1073,4 +1142,13 @@
   .cn-nav-links .cn-btn--app { padding: 0; width: 40px; }
   .cn-btn-label { display: none; }
   .cn-nav-links .cn-btn--nav { padding: 0 14px; }
+}
+
+/* 40px is fine under a mouse; under a thumb the floor is 44. */
+@media (pointer: coarse) {
+  .cn-nav-links .cn-btn--nav,
+  .cn-nav-links .cn-btn--app { min-height: 44px; }
+}
+@media (pointer: coarse) and (max-width: 720px) {
+  .cn-nav-links .cn-btn--app { width: 44px; }
 }

@@ -17,7 +17,7 @@ export default function Audiences() {
         <div className="cn-grid cn-aud-grid">
           {audiences.map((a) => (
             <div key={a.variant} data-reveal="1" className={`cn-aud cn-aud--${a.variant}`}>
-              <div className={`cn-kicker cn-kicker--${a.kickerTone} cn-mb12`}>{a.kicker}</div>
+              <div className={`cn-kicker cn-kicker--${a.kickerTone}`}>{a.kicker}</div>
               <h3>{a.title}</h3>
               <ul>
                 {a.items.map((it) => (

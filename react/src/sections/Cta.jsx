@@ -30,8 +30,24 @@ export default function Cta() {
             setSubmitted(true);
           }}
         >
+          {/* A placeholder is not a label: it is gone the moment someone types,
+              and screen readers do not reliably announce it. The labels are
+              visually hidden so the form keeps its look. */}
           {formFields.map((f) => (
-            <input key={f.placeholder} type="text" placeholder={f.placeholder} required={f.required} />
+            <div key={f.id}>
+              <label className="cn-sr-only" htmlFor={`demo-${f.id}`}>
+                {f.placeholder}
+              </label>
+              <input
+                id={`demo-${f.id}`}
+                name={f.id}
+                type="text"
+                placeholder={f.placeholder}
+                required={f.required}
+                autoComplete={f.autoComplete}
+                inputMode={f.inputMode}
+              />
+            </div>
           ))}
           <button type="submit">{submitted ? 'Thanks — we will call you' : 'Book a demo'}</button>
         </form>

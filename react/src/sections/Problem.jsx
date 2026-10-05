@@ -4,7 +4,7 @@ export default function Problem() {
   return (
     <section data-ground="warm-paper" className="cn-sec">
       <div className="cn-problem-panel cn-surface cn-surface--cream">
-        <div data-reveal="1" className="cn-kicker cn-kicker--neutral cn-mb20">
+        <div data-reveal="1" className="cn-kicker cn-kicker--neutral">
           What it replaces
         </div>
         <h2 data-reveal="1">
