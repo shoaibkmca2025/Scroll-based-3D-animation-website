@@ -65,7 +65,20 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* Scrolling is the browser's own. A JavaScript smooth-scroll layer used to sit
+   on top of it, and every wheel notch then answered through the main thread
+   and coasted for most of a second — any work on that thread showed up as a
+   stutter in the scroll itself. Native scrolling runs off the main thread and
+   is already eased on every desktop browser.
+
+   Anchors still glide, and stop short of the sticky nav. */
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--nav-h) + 12px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
 
 body {
   margin: 0;

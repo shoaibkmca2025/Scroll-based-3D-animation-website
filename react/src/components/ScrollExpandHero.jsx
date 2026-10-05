@@ -1,11 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { pauseScroller, resumeScroller, scrollToAnchor } from '../lib/scroller.js';
 
 // Keys that would scroll the page down. While the panel is opening the
 // document is locked, so without this they did nothing at all and a keyboard
 // user had no way past the first screen.
 const FORWARD_KEYS = new Set(['ArrowDown', 'PageDown', ' ', 'End']);
+
+// How far one pixel of wheel travel opens the panel. A Windows notch is
+// ~100px, so this opens it in about six notches; a trackpad swipe does it in
+// one. It was eleven, which read as the page refusing to scroll.
+const WHEEL_GAIN = 0.0018;
+
+// The panel follows its target on a critically damped spring: no overshoot,
+// settles in roughly `RESPONSE` seconds, and keeps its velocity when the
+// target moves again mid-flight.
+const RESPONSE = 0.32;
+const OMEGA = (2 * Math.PI) / RESPONSE;
+
+const wheelPixels = (e) => (e.deltaMode === 1 ? e.deltaY * 33 : e.deltaMode === 2 ? e.deltaY * innerHeight : e.deltaY);
 
 /**
  * A hero whose media panel expands as you scroll, then releases the page and
@@ -19,15 +31,16 @@ const FORWARD_KEYS = new Set(['ArrowDown', 'PageDown', ' ', 'End']);
  *   .tsx        ->  .jsx, prop types dropped
  *   Tailwind    ->  the .se-* classes in app.css
  *
- * The behaviour is unchanged: wheel and touch drive `progress` from 0 to 1,
- * the page is pinned at the top until the panel is open, and scrolling back up
- * at the very top collapses it again.
+ * Wheel and touch drive `progress` from 0 to 1, the page is pinned at the top
+ * until the panel is open, and scrolling back up at the very top collapses it
+ * again.
  *
- * The one addition is pausing the smooth-scroll layer. This component calls
- * preventDefault on every wheel notch while it is opening, and Lenis is
- * listening for the same event — two handlers fighting over one gesture makes
- * the expansion stutter. Lenis is stopped while the panel is opening and
- * started again the moment it is open.
+ * A wheel no longer sets the size directly. Each notch arrived as one 9% jump,
+ * so on a mouse the panel grew in visible steps. Wheel and keyboard now move a
+ * target, and the panel springs after it — continuous between notches, and
+ * redirectable at any moment because the spring starts from wherever the
+ * panel is. A finger still drives it one-to-one: touch is direct manipulation
+ * and a spring behind it would only add lag.
  */
 export default function ScrollExpandHero({
   mediaSrc,
@@ -61,41 +74,32 @@ export default function ScrollExpandHero({
   const [isPhone, setIsPhone] = useState(false);
   const touchStartY = useRef(0);
   const sectionRef = useRef(null);
-  const tween = useRef(0);
-  const progressRef = useRef(progress);
-  progressRef.current = progress;
+  // spring state: where the panel is, how fast it is moving, where it is going
+  const spring = useRef({ x: skip ? 1 : 0, v: 0, target: skip ? 1 : 0, raf: 0, last: 0 });
 
   /* Pin the document while the panel is opening, and hand the wheel back the
-     moment it is open.
-
-     The original does this by calling preventDefault on every notch and
-     scrolling back to 0 from a scroll handler. That is a race, and here it
-     loses: the smooth-scroll layer runs its own rAF loop that writes the
-     scroll position every frame, so it simply puts the page back where it
-     wanted it and the hero slid away mid-expansion. Taking overflow off the
-     document removes the race — there is nowhere to scroll to, wheel events
-     still arrive, and progress still advances. */
+     moment it is open. Taking overflow off the document is what pins it:
+     there is nowhere to scroll to, wheel events still arrive, and progress
+     still advances. */
   useEffect(() => {
     const root = document.documentElement;
     if (expanded) {
       root.classList.remove('se-lock');
-      resumeScroller();
     } else {
       root.classList.add('se-lock');
-      pauseScroller();
-      scrollTo(0, 0);
+      // `instant`: the page glides to anchors, and this must not glide
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
-    return () => {
-      root.classList.remove('se-lock');
-      resumeScroller();
-    };
+    return () => root.classList.remove('se-lock');
   }, [expanded]);
 
   useEffect(() => {
-    const setTo = (value) => {
+    const s = spring.current;
+
+    const commit = (value) => {
       const next = Math.min(Math.max(value, 0), 1);
       setProgress(next);
-      if (next >= 1) {
+      if (next >= 1 && s.target >= 1) {
         setExpanded(true);
         setShowContent(true);
       } else if (next < 0.75) {
@@ -103,28 +107,49 @@ export default function ScrollExpandHero({
       }
     };
 
-    // Any direct input takes over from a running open, from wherever the
-    // panel has got to — it never has to finish first.
-    const stopTween = () => cancelAnimationFrame(tween.current);
-    const advance = (delta) => {
-      stopTween();
-      setTo(progressRef.current + delta);
+    const step = (now) => {
+      // capped so a stalled tab does not resume with one enormous step
+      let dt = Math.min(0.064, (now - s.last) / 1000);
+      s.last = now;
+      // sub-stepped: the integrator stays stable on a slow frame
+      while (dt > 0) {
+        const h = Math.min(dt, 1 / 120);
+        s.v += (-OMEGA * OMEGA * (s.x - s.target) - 2 * OMEGA * s.v) * h;
+        s.x += s.v * h;
+        dt -= h;
+      }
+      if (Math.abs(s.x - s.target) < 0.0008 && Math.abs(s.v) < 0.01) {
+        s.x = s.target;
+        s.v = 0;
+        s.raf = 0;
+        commit(s.x);
+        return;
+      }
+      commit(s.x);
+      s.raf = requestAnimationFrame(step);
     };
 
-    /* For discrete input — a key, a link — that has no distance of its own to
-       drive the panel with. Starts from the panel's current size, and eases
-       out so it moves off at once and settles into the open state. */
-    const openFully = () => {
-      stopTween();
-      const from = progressRef.current;
-      const t0 = performance.now();
-      const step = (now) => {
-        const k = Math.min(1, (now - t0) / 560);
-        setTo(from + (1 - from) * (1 - Math.pow(1 - k, 3)));
-        if (k < 1) tween.current = requestAnimationFrame(step);
-      };
-      tween.current = requestAnimationFrame(step);
+    // Move the target; the spring picks up from wherever the panel is now,
+    // at whatever speed it already has.
+    const aim = (target) => {
+      s.target = Math.min(Math.max(target, 0), 1);
+      if (!s.raf) {
+        s.last = performance.now();
+        s.raf = requestAnimationFrame(step);
+      }
     };
+
+    // Put the panel somewhere outright — a finger on it, or a link that
+    // cannot wait for an animation.
+    const jump = (value) => {
+      cancelAnimationFrame(s.raf);
+      s.raf = 0;
+      s.x = s.target = Math.min(Math.max(value, 0), 1);
+      s.v = 0;
+      commit(s.x);
+    };
+
+    const openFully = () => aim(1);
 
     const onWheel = (e) => {
       if (expanded && e.deltaY < 0 && window.scrollY <= 5) {
@@ -132,7 +157,7 @@ export default function ScrollExpandHero({
         e.preventDefault();
       } else if (!expanded) {
         e.preventDefault();
-        advance(e.deltaY * 0.0009);
+        aim(s.target + wheelPixels(e) * WHEEL_GAIN);
       }
     };
 
@@ -159,12 +184,11 @@ export default function ScrollExpandHero({
       const target = link && link.hash && document.querySelector(link.hash);
       if (!target) return;
       e.preventDefault();
-      e.stopPropagation();
-      stopTween();
-      setTo(1);
+      jump(1);
       history.pushState(null, '', link.hash);
-      // a frame later, once the effect above has released the scroller
-      requestAnimationFrame(() => requestAnimationFrame(() => scrollToAnchor(target)));
+      // a frame later, once the effect above has unlocked the document; the
+      // glide and the nav offset come from scroll-behavior/scroll-padding
+      requestAnimationFrame(() => requestAnimationFrame(() => target.scrollIntoView()));
     };
 
     const onTouchStart = (e) => {
@@ -182,7 +206,7 @@ export default function ScrollExpandHero({
         e.preventDefault();
         // a little more sensitive on the way back up, which is the harder
         // direction to complete on a short phone screen
-        advance(dy * (dy < 0 ? 0.008 : 0.005));
+        jump(s.x + dy * (dy < 0 ? 0.008 : 0.005));
         touchStartY.current = y;
       }
     };
@@ -196,7 +220,7 @@ export default function ScrollExpandHero({
     addEventListener('touchmove', onTouchMove, { passive: false });
     addEventListener('touchend', onTouchEnd);
     addEventListener('keydown', onKey);
-    // capture, so it runs before the smooth-scroll layer's own anchor handler
+    // capture, so the browser's own anchor jump never starts
     addEventListener('click', onClick, true);
     return () => {
       removeEventListener('wheel', onWheel);
@@ -208,7 +232,7 @@ export default function ScrollExpandHero({
     };
   }, [expanded]);
 
-  useEffect(() => () => cancelAnimationFrame(tween.current), []);
+  useEffect(() => () => cancelAnimationFrame(spring.current.raf), []);
 
   useEffect(() => {
     const check = () => setIsPhone(innerWidth < 768);
@@ -227,16 +251,13 @@ export default function ScrollExpandHero({
   return (
     <div ref={sectionRef} className="se-root">
       <section className="se-section">
-        {/* The ground fades out as the panel takes over the screen. */}
-        <motion.div
-          className="se-bg"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 - progress }}
-          transition={{ duration: 0.1 }}
-        >
+        {/* The ground fades out as the panel takes over the screen. Driven
+            straight off `progress`: the spring already smooths it, and a
+            tween on top of the spring would only trail behind it. */}
+        <div className="se-bg" style={{ opacity: 1 - progress }}>
           <img src={bgImageSrc} alt="" width="1920" height="1080" />
           <div className="se-bg-veil" />
-        </motion.div>
+        </div>
 
         <div className="se-stage">
           <div
@@ -244,12 +265,7 @@ export default function ScrollExpandHero({
             style={{ width: `${panelWidth}px`, height: `${panelHeight}px` }}
           >
             <img className="se-panel-media" src={mediaSrc} alt="" width="1600" height="900" />
-            <motion.div
-              className="se-panel-veil"
-              initial={{ opacity: 0.7 }}
-              animate={{ opacity: 0.7 - progress * 0.3 }}
-              transition={{ duration: 0.2 }}
-            />
+            <div className="se-panel-veil" style={{ opacity: 0.7 - progress * 0.3 }} />
             {/* Whatever is layered inside the panel — the live mock-ups. */}
             <div
               className="se-panel-inner"
@@ -272,8 +288,8 @@ export default function ScrollExpandHero({
               them, which is what makes the expansion feel like it is pushing
               the page apart rather than just growing. */}
           <div className={`se-title ${textBlend ? 'se-title--blend' : ''}`}>
-            <motion.h1 style={{ transform: `translateX(-${titleShift}vw)` }}>{firstWord}</motion.h1>
-            <motion.h1 style={{ transform: `translateX(${titleShift}vw)` }}>{restOfTitle}</motion.h1>
+            <h1 style={{ transform: `translateX(-${titleShift}vw)` }}>{firstWord}</h1>
+            <h1 style={{ transform: `translateX(${titleShift}vw)` }}>{restOfTitle}</h1>
           </div>
 
           {/* Gone as soon as the gesture has started — by then it has been

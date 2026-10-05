@@ -1,4 +1,3 @@
-import useSmoothScroll from './hooks/useSmoothScroll.js';
 import useScrollFx from './hooks/useScrollFx.js';
 import useMotion from './hooks/useMotion.js';
 import Ticker from './components/Ticker.jsx';
@@ -17,7 +16,6 @@ import Faq from './sections/Faq.jsx';
 import Cta from './sections/Cta.jsx';
 
 export default function App() {
-  useSmoothScroll();
   useScrollFx();
   useMotion();
 
