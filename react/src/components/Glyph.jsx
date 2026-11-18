@@ -56,6 +56,22 @@ const PATHS = {
       <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" />
       <circle cx="12" cy="10" r="2.3" />
     </>
+  ),
+  // the rupee sign: dues received
+  rupee: <path d="M7 5h10M7 9h10M13.5 5c3.5 0 3.5 8 0 8H7l7.5 7" />,
+  // a loudhailer: a notice to everyone
+  notice: (
+    <>
+      <path d="M4 10v4h3l8 4.5V5.5L7 10z" />
+      <path d="M18.5 9.5a3.5 3.5 0 0 1 0 5M7 14l1.2 5" />
+    </>
+  ),
+  // a person: household staff
+  person: (
+    <>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M5 20.5c.8-3.8 3.6-6 7-6s6.2 2.2 7 6" />
+    </>
   )
 };
 

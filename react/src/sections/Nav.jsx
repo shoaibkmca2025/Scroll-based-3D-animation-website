@@ -11,6 +11,7 @@ export default function Nav() {
         <a href="#gate">The gate</a>
         <a href="#roles">Roles</a>
         <a href="#features">Features</a>
+        <a href="#guide">User guide</a>
 
         {/* The app is a PWA, so this is not a file download — it opens
             app.grihive.com, where the browser offers "Add to Home Screen"

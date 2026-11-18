@@ -62,11 +62,6 @@ export default function useMotion() {
       // how far it lags the page, as a fraction of its distance from centre
       k: parseFloat(el.dataset.parallax) || 0.06
     }));
-    /* The hero is a stuck stage too, and gets the same treatment: the flag it
-       hangs off goes on only while this hook is driving, so reduced motion and
-       a blocked script both fall back to ordinary flow. */
-    const hero = document.querySelector('.cn-hero');
-
     const pins = [...document.querySelectorAll('[data-pin]')].map((el) => ({
       el,
       steps: [...el.querySelectorAll('[data-pin-step]')]
@@ -81,13 +76,9 @@ export default function useMotion() {
         return { el, k, mid: r.top + scrollY + r.height / 2 };
       });
       /* The live flag has to go on *before* the height is read: it is what
-         makes the track 300vh, so measuring first captures the collapsed
+         makes the track tall, so measuring first captures the collapsed
          height and every progress figure after it is wrong until the next
          remeasure. Setting it here also keeps it out of the frame loop. */
-      if (hero) {
-        if (wide()) hero.setAttribute('data-hero-live', '');
-        else hero.removeAttribute('data-hero-live');
-      }
       pins.forEach((p) => {
         if (wide()) p.el.setAttribute('data-pin-live', '');
         else p.el.removeAttribute('data-pin-live');

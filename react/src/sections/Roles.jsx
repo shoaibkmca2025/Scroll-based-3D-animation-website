@@ -26,7 +26,9 @@ export default function Roles() {
                 <tr key={office}>
                   <td>{office}</td>
                   {cells.map(([text, granted], i) => (
-                    <td key={i} className={granted ? 'cn-yes' : 'cn-no'}>
+                    // the column name, shown beside the value once a phone
+                    // stacks each row into a card and the header is hidden
+                    <td key={i} className={granted ? 'cn-yes' : 'cn-no'} data-label={roleColumns[i + 1]}>
                       {text}
                     </td>
                   ))}

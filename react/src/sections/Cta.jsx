@@ -30,26 +30,28 @@ export default function Cta() {
             setSubmitted(true);
           }}
         >
-          {/* A placeholder is not a label: it is gone the moment someone types,
-              and screen readers do not reliably announce it. The labels are
-              visually hidden so the form keeps its look. */}
+          {/* Visible labels, not placeholders: a placeholder is gone the
+              moment someone types, and with it what the field was for. */}
           {formFields.map((f) => (
             <div key={f.id}>
-              <label className="cn-sr-only" htmlFor={`demo-${f.id}`}>
-                {f.placeholder}
+              <label htmlFor={`demo-${f.id}`}>
+                {f.label}
+                {!f.required && <span className="cn-form-opt"> (optional)</span>}
               </label>
               <input
                 id={`demo-${f.id}`}
                 name={f.id}
-                type="text"
-                placeholder={f.placeholder}
+                type={f.type || 'text'}
                 required={f.required}
                 autoComplete={f.autoComplete}
                 inputMode={f.inputMode}
               />
             </div>
           ))}
-          <button type="submit">{submitted ? 'Thanks — we will call you' : 'Book a demo'}</button>
+          {/* polite live region, so the change of label is announced too */}
+          <button type="submit" aria-live="polite">
+            {submitted ? 'Thanks — we will call you' : 'Book a demo'}
+          </button>
         </form>
       </div>
     </section>

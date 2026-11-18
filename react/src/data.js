@@ -253,9 +253,34 @@ export const faqs = [
   }
 ];
 
+// The user guide, one short video per chapter in each language, served from
+// public/guide/<en|hi>/<nn>.mp4 with a poster frame beside it as <nn>.jpg.
+// Titles are the ones burned into the videos; `dur` is [English, Hindi] in
+// seconds, read off the files.
+export const guideChapters = [
+  { en: 'Registering', hi: 'रजिस्ट्रेशन', dur: [91, 85] },
+  { en: 'Signing in', hi: 'साइन इन करना', dur: [45, 42] },
+  { en: 'Home screen', hi: 'Home स्क्रीन', dur: [57, 49] },
+  { en: 'Notices', hi: 'नोटिस', dur: [27, 25] },
+  { en: 'Events', hi: 'इवेंट्स', dur: [49, 42] },
+  { en: 'Complaints', hi: 'शिकायतें', dur: [38, 35] },
+  { en: 'Amenity booking', hi: 'सुविधा बुकिंग', dur: [36, 35] },
+  { en: 'Your gate status', hi: 'आपका गेट स्टेटस', dur: [35, 33] },
+  { en: 'Visitor passes', hi: 'विज़िटर पास', dur: [36, 33] },
+  { en: 'Approving a visitor', hi: 'विज़िटर को मंज़ूरी देना', dur: [23, 25] },
+  { en: 'Household staff', hi: 'घरेलू स्टाफ', dur: [30, 27] },
+  { en: 'Maintenance and funds', hi: 'मेंटेनेंस और फंड', dur: [39, 36] },
+  { en: 'Profile and account', hi: 'प्रोफ़ाइल और अकाउंट', dur: [34, 33] },
+  { en: 'For the committee', hi: 'कमेटी के लिए', dur: [46, 42] },
+  { en: 'For security guards', hi: 'सिक्योरिटी गार्ड के लिए', dur: [54, 48] }
+];
+
 export const formFields = [
-  { id: 'society', placeholder: 'Society name', required: true, autoComplete: 'organization' },
-  { id: 'city', placeholder: 'City', required: true, autoComplete: 'address-level2' },
-  { id: 'flats', placeholder: 'Number of flats', required: false, inputMode: 'numeric' },
-  { id: 'contact', placeholder: 'Your name and mobile number', required: true, autoComplete: 'on' }
+  { id: 'society', label: 'Society name', required: true, autoComplete: 'organization' },
+  { id: 'city', label: 'City', required: true, autoComplete: 'address-level2' },
+  { id: 'flats', label: 'Number of flats', required: false, inputMode: 'numeric' },
+  // Name and number were one field, which no autofill can fill and which
+  // gave a phone the letter keyboard for typing digits.
+  { id: 'name', label: 'Your name', required: true, autoComplete: 'name' },
+  { id: 'mobile', label: 'Mobile number', required: true, type: 'tel', autoComplete: 'tel' }
 ];

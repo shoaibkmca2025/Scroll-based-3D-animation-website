@@ -12,6 +12,7 @@ import Roles from './sections/Roles.jsx';
 import Screens from './sections/Screens.jsx';
 import Features from './sections/Features.jsx';
 import Onboarding from './sections/Onboarding.jsx';
+import Guide from './sections/Guide.jsx';
 import Faq from './sections/Faq.jsx';
 import Cta from './sections/Cta.jsx';
 
@@ -34,6 +35,7 @@ export default function App() {
       <Features />
       <Ticker />
       <Onboarding />
+      <Guide />
       <Faq />
       <Cta />
 
