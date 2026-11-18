@@ -9,7 +9,7 @@ const INBOX = 'Grihive@gmail.com';
 const ENQUIRY_URL = `https://formsubmit.co/ajax/${INBOX}`;
 
 export default function Cta() {
-  // idle | sending | sent | failed
+  // idle | sending | sent | offline | refused
   const [status, setStatus] = useState('idle');
 
   const submit = async (e) => {
@@ -17,8 +17,9 @@ export default function Cta() {
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form));
     setStatus('sending');
+    let res;
     try {
-      const res = await fetch(ENQUIRY_URL, {
+      res = await fetch(ENQUIRY_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
@@ -29,15 +30,21 @@ export default function Cta() {
           _honey: data._honey
         })
       });
-      const body = await res.json().catch(() => ({}));
-      // an inbox not yet activated still answers 200, with success "false"
-      if (!res.ok || String(body.success) !== 'true') throw new Error(body.message || `HTTP ${res.status}`);
-      form.reset();
-      setStatus('sent');
     } catch {
-      // the fields are left as typed, so trying again is one press
-      setStatus('failed');
+      // never reached FormSubmit; the fields are left as typed, so retrying is one press
+      setStatus('offline');
+      return;
     }
+    const body = await res.json().catch(() => ({}));
+    // An inbox not yet activated still answers 200, with success "false" and
+    // a message saying so; logged for whoever opens the console to find out why.
+    if (!res.ok || String(body.success) !== 'true') {
+      console.warn('Demo request refused by FormSubmit:', res.status, body.message);
+      setStatus('refused');
+      return;
+    }
+    form.reset();
+    setStatus('sent');
   };
 
   return (
@@ -59,7 +66,9 @@ export default function Cta() {
             The committee needs nothing extra.
           </div>
         </div>
-        <form className="cn-form" onSubmit={submit}>
+        {/* post, so a submit before the script takes over never puts a name
+            and number into the address bar as a query string */}
+        <form className="cn-form" method="post" onSubmit={submit}>
           {/* Visible labels, not placeholders: a placeholder is gone the
               moment someone types, and with it what the field was for. */}
           {formFields.map((f) => (
@@ -85,11 +94,13 @@ export default function Cta() {
           <button type="submit" disabled={status === 'sending'}>
             {status === 'sending' ? 'Sending…' : 'Book a demo'}
           </button>
-          <p className={`cn-form-msg${status === 'failed' ? ' cn-form-msg--bad' : ''}`} aria-live="polite">
+          <p className={`cn-form-msg${status === 'offline' || status === 'refused' ? ' cn-form-msg--bad' : ''}`} aria-live="polite">
             {status === 'sent' && 'Thanks, we have your request. We will call you to set up the demo.'}
-            {status === 'failed' && (
+            {(status === 'offline' || status === 'refused') && (
               <>
-                That did not go through. Check your connection and try again, or email us at{' '}
+                {status === 'offline'
+                  ? 'That did not go through. Check your connection and try again, or email us at '
+                  : 'We could not send your request just now. Please try again in a minute, or email us at '}
                 <a href={`mailto:${INBOX}`}>{INBOX}</a>.
               </>
             )}

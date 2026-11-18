@@ -31,9 +31,12 @@ export default function useMotion() {
        Only elements that start below the fold are hidden; anything already
        on screen at load is left alone, so the first paint is not a blank
        page waiting for an observer to fire. */
-    const revealed = [];
-    document.querySelectorAll('[data-reveal]').forEach((el) => {
-      if (el.getBoundingClientRect().top <= innerHeight * 0.92) return;
+    // Every position is read before any style is written: reading one, hiding
+    // it, then reading the next forced a fresh layout per element (69 of them).
+    const revealed = [...document.querySelectorAll('[data-reveal]')].filter(
+      (el) => el.getBoundingClientRect().top > innerHeight * 0.92
+    );
+    revealed.forEach((el) => {
       const sibs = el.parentElement
         ? [...el.parentElement.children].filter((c) => c.hasAttribute('data-reveal'))
         : [el];
@@ -41,7 +44,6 @@ export default function useMotion() {
       el.style.opacity = '0';
       el.style.transform = 'translateY(20px)';
       el.style.transition = `opacity .62s ${EASE} ${delay}ms, transform .62s ${EASE} ${delay}ms`;
-      revealed.push(el);
     });
 
     const io = new IntersectionObserver(

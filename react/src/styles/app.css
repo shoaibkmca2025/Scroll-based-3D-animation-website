@@ -689,6 +689,18 @@
 .cn-rail-cap { margin-top: 14px; font-size: 13.5px; line-height: 1.5; color: var(--on-dark-2); }
 .cn-rail-cap strong { display: block; font-size: 15.5px; font-weight: 700; letter-spacing: -0.018em; margin-bottom: 4px; color: #fff; }
 
+/* The lower sections are laid out and painted only as they come near the
+   screen; on a mid-range phone the first layout of the whole page held the
+   main thread for ~350ms, mostly for content nobody could see yet. Only the
+   sections after the screens rail: everything above it is measured by the
+   pinned gate and the rail, which need real positions. */
+#features,
+#onboarding,
+#guide,
+.cn-faq,
+#demo,
+.cn-footer { content-visibility: auto; contain-intrinsic-size: auto 900px; }
+
 /* ── user guide ───────────────────────────────────────────────────────
    A player and its chapter list side by side, the list exactly as tall as
    the player and scrolling inside it, the way a playlist does. */
@@ -819,6 +831,12 @@
   transition: border-color 0.2s, background 0.2s;
 }
 .cn-form input:focus { border-color: var(--brand-hot); background: rgba(255, 255, 255, 0.1); }
+/* Autofilled fields turned pale blue with dark text — the browser's own
+   colours, which no background rule overrides. An inset shadow paints over
+   them in the field's own colour. Two rules: an unknown pseudo-class would
+   void the whole selector list. */
+.cn-form input:-webkit-autofill { -webkit-text-fill-color: #fff; caret-color: #fff; box-shadow: 0 0 0 100px #251d1b inset; }
+.cn-form input:autofill { -webkit-text-fill-color: #fff; caret-color: #fff; box-shadow: 0 0 0 100px #251d1b inset; }
 .cn-form button {
   margin-top: 6px;
   background: var(--brand);

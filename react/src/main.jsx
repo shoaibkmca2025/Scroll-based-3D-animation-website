@@ -12,5 +12,11 @@ const app = (
 );
 // The production build ships the page prerendered (prerender.mjs); the dev
 // server ships an empty #root.
-if (root.firstElementChild) hydrateRoot(root, app);
-else createRoot(root).render(app);
+if (root.firstElementChild) {
+  // Paint first, hydrate after: when the script lands before the first
+  // frame, hydrating straight away keeps the finished HTML invisible until
+  // React has walked the whole page.
+  requestAnimationFrame(() => setTimeout(() => hydrateRoot(root, app)));
+} else {
+  createRoot(root).render(app);
+}
