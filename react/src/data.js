@@ -282,5 +282,14 @@ export const formFields = [
   // Name and number were one field, which no autofill can fill and which
   // gave a phone the letter keyboard for typing digits.
   { id: 'name', label: 'Your name', required: true, autoComplete: 'name' },
-  { id: 'mobile', label: 'Mobile number', required: true, type: 'tel', autoComplete: 'tel' }
+  {
+    id: 'mobile',
+    label: 'Mobile number',
+    required: true,
+    type: 'tel',
+    autoComplete: 'tel',
+    // an Indian mobile, with or without +91 and a space in the middle
+    pattern: '(\\+91)?[\\s\\-]?[6-9][0-9]{4}[\\s\\-]?[0-9]{5}',
+    title: 'A 10-digit mobile number, for example 98765 43210'
+  }
 ];

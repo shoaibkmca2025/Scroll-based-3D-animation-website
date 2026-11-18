@@ -23,21 +23,24 @@ export default function App() {
   return (
     <div className="cn-page">
       <Nav />
-      <Hero />
-      <Ticker />
-      <Problem />
-      <Gate />
-      <Audiences />
-      <Garden />
-      <Play />
-      <Roles />
-      <Screens />
-      <Features />
-      <Ticker />
-      <Onboarding />
-      <Guide />
-      <Faq />
-      <Cta />
+      {/* the landmark screen readers jump to, past the nav */}
+      <main>
+        <Hero />
+        <Ticker />
+        <Problem />
+        <Gate />
+        <Audiences />
+        <Garden />
+        <Play />
+        <Roles />
+        <Screens />
+        <Features />
+        <Ticker />
+        <Onboarding />
+        <Guide />
+        <Faq />
+        <Cta />
+      </main>
 
       <footer className="cn-footer" data-ground="dark">
         <div>Grihive — residential society management.</div>

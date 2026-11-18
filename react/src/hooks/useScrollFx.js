@@ -19,6 +19,7 @@ export default function useScrollFx() {
     let railTop = 0;
     let railH = 1;
     let railBase = 0;
+    let railLeft = -1;
     let queued = false;
 
     /* The rail follows the page until someone reaches for it. After that it
@@ -54,10 +55,14 @@ export default function useScrollFx() {
     const apply = () => {
       queued = false;
       const p = Math.min(1, scrollY / maxScroll);
-      if (bar) bar.style.width = (p * 100).toFixed(2) + '%';
+      if (bar) bar.style.transform = `scaleX(${p.toFixed(4)})`;
       if (rail && !railHeld && railBase > 0) {
         const q = Math.min(1, Math.max(0, (scrollY + innerHeight - railTop) / (innerHeight + railH)));
-        rail.scrollLeft = q * railBase;
+        // Only when it moves. Setting scrollLeft makes Safari lay the page
+        // out, and this used to run on every frame of every scroll — while
+        // the rail is off screen q just sits at 0 or 1.
+        const left = Math.round(q * railBase);
+        if (left !== railLeft) rail.scrollLeft = railLeft = left;
       }
     };
 

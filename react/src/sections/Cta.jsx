@@ -1,8 +1,44 @@
 import { useState } from 'react';
 import { formFields } from '../data.js';
 
+/* FormSubmit relays a JSON post to this inbox as an email — no backend and
+   no account. The very first submission from grihive.com sends an "Activate
+   Form" link to the inbox instead of the enquiry; nothing is delivered until
+   it is clicked. */
+const INBOX = 'Grihive@gmail.com';
+const ENQUIRY_URL = `https://formsubmit.co/ajax/${INBOX}`;
+
 export default function Cta() {
-  const [submitted, setSubmitted] = useState(false);
+  // idle | sending | sent | failed
+  const [status, setStatus] = useState('idle');
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form));
+    setStatus('sending');
+    try {
+      const res = await fetch(ENQUIRY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          // labelled the way the form labels them, so the email reads plainly
+          ...Object.fromEntries(formFields.map((f) => [f.label, data[f.id] || '—'])),
+          _subject: `Demo request: ${data.society}, ${data.city}`,
+          _template: 'table',
+          _honey: data._honey
+        })
+      });
+      const body = await res.json().catch(() => ({}));
+      // an inbox not yet activated still answers 200, with success "false"
+      if (!res.ok || String(body.success) !== 'true') throw new Error(body.message || `HTTP ${res.status}`);
+      form.reset();
+      setStatus('sent');
+    } catch {
+      // the fields are left as typed, so trying again is one press
+      setStatus('failed');
+    }
+  };
 
   return (
     <section data-ground="dark" id="demo" className="cn-sec cn-cta">
@@ -23,13 +59,7 @@ export default function Cta() {
             The committee needs nothing extra.
           </div>
         </div>
-        <form
-          className="cn-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-          }}
-        >
+        <form className="cn-form" onSubmit={submit}>
           {/* Visible labels, not placeholders: a placeholder is gone the
               moment someone types, and with it what the field was for. */}
           {formFields.map((f) => (
@@ -45,13 +75,25 @@ export default function Cta() {
                 required={f.required}
                 autoComplete={f.autoComplete}
                 inputMode={f.inputMode}
+                pattern={f.pattern}
+                title={f.title}
               />
             </div>
           ))}
-          {/* polite live region, so the change of label is announced too */}
-          <button type="submit" aria-live="polite">
-            {submitted ? 'Thanks — we will call you' : 'Book a demo'}
+          {/* a field people never see; bots fill it, and FormSubmit drops those */}
+          <input className="cn-form-trap" type="text" name="_honey" tabIndex={-1} autoComplete="off" aria-hidden="true" />
+          <button type="submit" disabled={status === 'sending'}>
+            {status === 'sending' ? 'Sending…' : 'Book a demo'}
           </button>
+          <p className={`cn-form-msg${status === 'failed' ? ' cn-form-msg--bad' : ''}`} aria-live="polite">
+            {status === 'sent' && 'Thanks, we have your request. We will call you to set up the demo.'}
+            {status === 'failed' && (
+              <>
+                That did not go through. Check your connection and try again, or email us at{' '}
+                <a href={`mailto:${INBOX}`}>{INBOX}</a>.
+              </>
+            )}
+          </p>
         </form>
       </div>
     </section>

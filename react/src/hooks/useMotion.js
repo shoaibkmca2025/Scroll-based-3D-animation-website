@@ -1,19 +1,22 @@
 import { useEffect } from 'react';
 
 /**
- * Scroll motion for the page: staggered reveals, parallax on the app screens,
- * and the pinned gate sequence.
+ * Scroll motion for the page: staggered reveals and the pinned gate sequence.
  *
  * Two mechanisms, chosen per effect rather than one for everything. Reveals
  * run on an IntersectionObserver and unobserve themselves — something that
- * happens once should not cost a scroll handler. Parallax and the pin are
- * position-linked, so they share a single rAF-throttled handler that reads
- * cached offsets and writes nothing but transforms.
+ * happens once should not cost a scroll handler. The pin is position-linked,
+ * so it runs from a rAF-throttled handler that reads cached offsets and
+ * touches the DOM only when the active step changes.
  *
- * All of it is off under `prefers-reduced-motion`. The two position-linked
- * effects are also off below 900px: pinning a section on a phone takes the
- * scroll away from someone who has very little of it, and parallax at that
- * size is mostly jitter.
+ * There was JS parallax here too. Its one user also had a reveal, whose
+ * 0.62s transform transition was never removed, so every parallax write
+ * started a fresh transition — the rubbery lag on Macs. Main-thread parallax
+ * trails the scroll on Safari anyway; the hero's depth is done in CSS.
+ *
+ * All of it is off under `prefers-reduced-motion`. The pin is also off below
+ * 900px: pinning a section on a phone takes the scroll away from someone who
+ * has very little of it.
  */
 
 const EASE = 'cubic-bezier(.22,.7,.28,1)';
@@ -54,27 +57,15 @@ export default function useMotion() {
     );
     revealed.forEach((el) => io.observe(el));
 
-    /* ── position-linked effects ──────────────────────────────────────── */
+    /* ── the pinned gate ──────────────────────────────────────────────── */
     const wide = () => innerWidth >= 900;
-
-    const parallax = [...document.querySelectorAll('[data-parallax]')].map((el) => ({
-      el,
-      // how far it lags the page, as a fraction of its distance from centre
-      k: parseFloat(el.dataset.parallax) || 0.06
-    }));
     const pins = [...document.querySelectorAll('[data-pin]')].map((el) => ({
       el,
-      steps: [...el.querySelectorAll('[data-pin-step]')]
+      steps: [...el.querySelectorAll('[data-pin-step]')],
+      active: null
     }));
 
-    let boxes = [];
     const measure = () => {
-      // document-space geometry, read once per layout change rather than per
-      // frame — reading it in the scroll handler is what makes parallax janky
-      boxes = parallax.map(({ el, k }) => {
-        const r = el.getBoundingClientRect();
-        return { el, k, mid: r.top + scrollY + r.height / 2 };
-      });
       /* The live flag has to go on *before* the height is read: it is what
          makes the track tall, so measuring first captures the collapsed
          height and every progress figure after it is wrong until the next
@@ -92,36 +83,19 @@ export default function useMotion() {
     const apply = () => {
       queued = false;
       const on = wide();
-      const mid = scrollY + innerHeight / 2;
-
-      for (const b of boxes) {
-        if (!on) {
-          b.el.style.transform = '';
-          continue;
-        }
-        const d = mid - b.mid;
-        // only while it is anywhere near the viewport
-        if (Math.abs(d) > innerHeight * 1.6) continue;
-        b.el.style.transform = `translate3d(0, ${(d * b.k).toFixed(2)}px, 0)`;
-      }
-
       for (const p of pins) {
         if (!p.steps.length) continue;
-        if (!on) {
-          p.steps.forEach((s) => s.removeAttribute('data-on'));
-          continue;
-        }
         /* Progress through the part of the track that actually scrolls: the
            stage is stuck for `height - innerHeight`, and that span is what
            the steps are divided across. */
         const span = Math.max(1, p.height - innerHeight);
         const t = Math.min(1, Math.max(0, (scrollY - p.top) / span));
         // nudged off the very end so the last step holds rather than flicking
-        const active = Math.min(p.steps.length - 1, Math.floor(t * p.steps.length * 0.999));
-        p.steps.forEach((s, i) => {
-          if (i <= active) s.setAttribute('data-on', '');
-          else s.removeAttribute('data-on');
-        });
+        const active = on ? Math.min(p.steps.length - 1, Math.floor(t * p.steps.length * 0.999)) : -1;
+        // the attributes restyle the cards; write them only on a change of step
+        if (active === p.active) continue;
+        p.active = active;
+        p.steps.forEach((s, i) => s.toggleAttribute('data-on', i <= active));
       }
     };
 

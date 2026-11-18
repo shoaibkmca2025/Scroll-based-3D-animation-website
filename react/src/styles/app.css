@@ -176,7 +176,8 @@
   border-bottom: 1px solid rgba(23, 17, 15, 0.08);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
-.cn-progress { position: absolute; bottom: -1px; left: 0; height: 2px; width: 0%; background: var(--brand); }
+/* scaled, not resized: a width change re-ran layout on every scroll frame */
+.cn-progress { position: absolute; bottom: -1px; left: 0; height: 2px; width: 100%; background: var(--brand); transform: scaleX(0); transform-origin: 0 50%; }
 .cn-brand { display: flex; align-items: center; min-height: 44px; }
 /* The mark was 26px tall — 78px wide, smaller than the nav's own text links
    beside it. 34px gives it the weight of the thing the page is about, and the
@@ -305,10 +306,11 @@
 .cn-sky--far .cn-sky-slab { fill: #3d2219; }
 .cn-sky--near .cn-sky-body { fill: #160d0a; }
 .cn-sky--near .cn-sky-slab { fill: #2b1a13; }
-.cn-sky-win { fill: #ffc77d; animation: fade 0.5s ease both; }
+.cn-sky-win { fill: #ffc77d; animation: fade 0.8s ease both; }
 .cn-sky--far .cn-sky-win { fill: #e49a62; }
+.cn-sky-dim { fill-opacity: 0.65; }
 /* the blue of a television through a window */
-.cn-sky-win--tv { fill: #c9dcff; }
+.cn-sky-tv { fill: #c9dcff; }
 .cn-sky-tree { fill: #0f0806; }
 .cn-sky-wall { fill: #120a08; }
 .cn-sky--front .cn-sky-slab { fill: #3a2118; }
@@ -353,9 +355,11 @@
   border-radius: 22px;
   text-align: left;
   color: #fff;
-  background: rgba(38, 27, 23, 0.66);
-  -webkit-backdrop-filter: blur(24px) saturate(1.8);
-  backdrop-filter: blur(24px) saturate(1.8);
+  /* Solid, not frosted glass. Four backdrop blurs over layers that move
+     with the scroll had Safari re-blurring the hero on every frame — the
+     lag clients saw on Macs and iPhones. Over this dark scene the blur was
+     all but invisible anyway. */
+  background: rgba(34, 24, 21, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.7);
   animation: noteIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -384,6 +388,9 @@
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
     .cn-depth {
+      /* its own GPU layer from the start, so Safari moves it rather than
+         repainting the drawing inside it on every frame */
+      will-change: transform;
       animation: depth linear both;
       animation-timeline: scroll(root);
       animation-range: 0px 100vh;
@@ -412,7 +419,8 @@
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted-2);
+  /* --muted, not --muted-2: at 12px the lighter grey measured 3.6:1 */
+  color: var(--muted);
   white-space: nowrap;
 }
 .cn-ticker-set span::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--brand-pale); flex: none; }
@@ -826,6 +834,12 @@
   transition: transform 0.1s ease-out, background-color 0.2s;
 }
 .cn-form button:hover { background: var(--brand-bright); }
+.cn-form button:disabled { opacity: 0.6; cursor: progress; }
+.cn-form-trap { display: none; }
+.cn-form-msg { margin: 2px 4px 0; font-size: 14.5px; line-height: 1.5; color: var(--on-dark); }
+.cn-form-msg:empty { display: none; }
+.cn-form-msg--bad { color: var(--brand-pale); }
+.cn-form-msg a { color: #fff; text-decoration: underline; }
 .cn-form button:active { transform: scale(0.98); }
 
 /* ── footer ───────────────────────────────────────────────────────── */
@@ -848,7 +862,9 @@
 .cn-pin[data-pin-live] .cn-pin-track { height: 200vh; }
 .cn-pin[data-pin-live] .cn-pin-stage { position: sticky; top: 0; min-height: 100vh; display: flex; align-items: center; }
 .cn-pin[data-pin-live] .cn-pin-stage > * { width: 100%; }
-.cn-pin[data-pin-live] .cn-gate-step { opacity: 0.34; transform: translateY(10px); }
+/* 0.8, not 0.34: at a third the steps ahead measured 1.9:1 and could not be
+   read; the lit card and the lift already say which step is current */
+.cn-pin[data-pin-live] .cn-gate-step { opacity: 0.8; transform: translateY(10px); }
 .cn-pin[data-pin-live] .cn-gate-step[data-on] { opacity: 1; transform: none; background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.26); }
 
 /* The heading rides down beside the sixteen cards instead of leaving a tall
@@ -859,7 +875,6 @@
   .cn-features-panel > h2 { position: sticky; top: calc(var(--nav-h) + 32px); }
 }
 
-[data-parallax] { will-change: transform; }
 
 /* ── tablet ───────────────────────────────────────────────────────── */
 @media (max-width: 900px) {

@@ -18,7 +18,7 @@ export default function Garden() {
             ))}
           </ul>
         </div>
-        <div data-reveal="1" className="cn-garden-shots" data-parallax="0.07">
+        <div data-reveal="1" className="cn-garden-shots">
           <Shot img="shots/home" alt="Notices and society tools" sizes="(max-width: 720px) 34vw, 176px" />
           <Shot img="shots/finance" alt="Payment history" sizes="(max-width: 720px) 34vw, 176px" />
         </div>
