@@ -21,6 +21,8 @@ export default function Cta() {
     try {
       res = await fetch(ENQUIRY_URL, {
         method: 'POST',
+        // FormSubmit has been seen taking over a minute; never leave a visitor on "Sending…"
+        signal: AbortSignal.timeout(30000),
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           // labelled the way the form labels them, so the email reads plainly
@@ -30,9 +32,10 @@ export default function Cta() {
           _honey: data._honey
         })
       });
-    } catch {
-      // never reached FormSubmit; the fields are left as typed, so retrying is one press
-      setStatus('offline');
+    } catch (err) {
+      // No answer: offline, or FormSubmit too slow. The fields are left as
+      // typed, so retrying is one press.
+      setStatus(err.name === 'TimeoutError' ? 'refused' : 'offline');
       return;
     }
     const body = await res.json().catch(() => ({}));
